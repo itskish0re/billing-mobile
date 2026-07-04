@@ -10,13 +10,17 @@ Phased plan for building the React Native + Supabase billing app.
 
 | Task | Output |
 |------|--------|
-| Create Expo app at repo root (or `app/`) | `npx create-expo-app` with TypeScript |
+| Create Expo app (SDK 56, Expo UI template) | `npx create-expo-app@latest --template default@sdk-56` |
 | Create Supabase project (free tier) | Project URL + anon key |
 | Init Supabase CLI + migrations folder | `supabase init`, link project |
+| **GitHub Actions heartbeat** | `.github/workflows/supabase-heartbeat.yml` (ADR-010) |
 | Extract shared package from base-app | `packages/shared/` with billForm, schemas, types |
-| Configure ESLint, Prettier, env vars | `.env` with `EXPO_PUBLIC_SUPABASE_URL` |
+| Configure `eas.json` for Android APK | `buildType: apk`, internal distribution |
+| Configure env vars | `EXPO_PUBLIC_SUPABASE_URL`, anon key |
 
-**Exit criteria:** App boots, Supabase client connects, shared package imports work.
+**Exit criteria:** App boots with `@expo/ui` Host, Supabase connects, heartbeat workflow green.
+
+**Platform:** Android only. **UI:** `@expo/ui` only — no Paper/NativeWind.
 
 ---
 
@@ -30,7 +34,7 @@ Phased plan for building the React Native + Supabase billing app.
 | Seed roles, menus, financial year | SQL seed scripts |
 | Build login screen | Email/password via Supabase Auth |
 | Session persistence | `expo-secure-store` for session |
-| Role-based drawer navigation | Filter routes by role (from profiles) |
+| Hardcoded drawer navigation | Static routes filtered by admin/user role (no `app_menu` table) |
 
 **Exit criteria:** User can log in, see role-appropriate menu, RLS blocks unauthorized access.
 
@@ -40,9 +44,10 @@ Phased plan for building the React Native + Supabase billing app.
 
 | Task | Output |
 |------|--------|
-| Financial year picker (global context) | Zustand/Context, persisted in AsyncStorage |
-| Master list screens (7 entities) | FlatList + search + pull-to-refresh |
-| Master form screens | Create/edit with validation |
+| Financial year picker (global context) | Zustand + **MMKV** persist |
+| Master list screens (7 entities) | Expo UI `Column` + mapped rows + search |
+| Master form screens | Single-record create/edit (no batch APIs) |
+| Financial year | Picker only — no FY CRUD screen |
 | Lookup picker component | Modal search for bill form (trucks, parties, etc.) |
 | Indian formatters in UI | Mobile, vehicle, currency display |
 
@@ -64,7 +69,7 @@ Phased plan for building the React Native + Supabase billing app.
 | Edge Function: `save-bill` | Transactional upsert bill + sync loads |
 | Edge Function: `cancel-bill` | Set is_cancelled |
 | Next bill number suggestion | SQL function or Edge Function |
-| Bill navigator (prev/next) | Query by bill_number in FY |
+| ~~Bill navigator (prev/next)~~ | **Cut** per ADR-012 |
 
 **Exit criteria:** Full bill lifecycle — create, edit, cancel, list, detail.
 
@@ -83,16 +88,16 @@ Phased plan for building the React Native + Supabase billing app.
 
 ---
 
-## Phase 5 — Loads & Polish (Week 6–7)
+## Phase 5 — Polish & APK (Week 5–6)
 
 | Task | Output |
 |------|--------|
-| Loads list screen | Read-only, FY-scoped |
+| Loads list screen | **Optional v1.1** — defer if bills take longer |
 | Error handling + toast messages | Consistent UX |
 | Loading states + empty states | All list screens |
 | App icon + splash screen | Branding |
-| EAS Build for Android APK | Internal distribution |
-| Optional: iOS TestFlight | If iOS required |
+| EAS Build for Android APK | Sideload to users |
+| GitHub Actions heartbeat verified | Project stays awake on free tier |
 
 **Exit criteria:** MVP feature-complete for field use.
 
@@ -102,11 +107,11 @@ Phased plan for building the React Native + Supabase billing app.
 
 | Task | Notes |
 |------|-------|
-| Supabase Pro upgrade | Removes inactivity pause, adds backups |
-| Scheduled `pg_dump` backup | If staying on free tier |
-| Inactivity keep-alive | `pg_cron` weekly ping |
-| EAS Update for OTA patches | JS-only fixes without store resubmit |
-| Admin menu screen | Low priority; defer |
+| Heartbeat monitoring | Alert if GitHub Action fails |
+| Weekly `pg_dump` backup (optional) | GitHub artifact — free tier has no auto backups |
+| EAS Update for OTA patches | JS-only fixes without new APK |
+| Loads list | v1.1 if deferred |
+| Windows desktop client | Future ADR |
 
 ---
 
@@ -146,7 +151,7 @@ billing-mobile/
 | 4 Print | Medium | Medium (PDF layout) |
 | 5 Polish | Low | Low |
 
-**Total:** ~6–7 weeks part-time for a single developer familiar with the base-app.
+**Total:** ~4–5 weeks part-time with scope reduction (ADR-012).
 
 ---
 
@@ -155,10 +160,11 @@ billing-mobile/
 **In MVP:**
 - Login, FY picker, all masters, bills CRUD, bill print/share, loads list
 
-**Out of MVP:**
-- Dashboard widgets
-- Menu admin
-- Offline drafts
-- Web/desktop client
+**Out of MVP (ADR-012):**
+- Dashboard, menu admin, bill navigator
+- UI metadata registry + screen API
+- Endpoint permission registry
+- Batch master operations
+- Expanded row panels (use detail screens)
+- Offline drafts, web client, iOS build
 - Full metadata-driven column admin
-- Batch master operations (single-record CRUD is enough for &lt;10 users)

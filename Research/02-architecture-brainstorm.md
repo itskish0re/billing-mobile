@@ -107,13 +107,15 @@ For &lt;10 users in a single-org billing app:
 
 **Conclusion:** Free tier is **more than adequate** for data and users. Watch **inactivity pause** and **no backups** — mitigations below.
 
-### Free tier mitigations
+### Free tier mitigations (ADR-010 — free tier only, no Pro)
 
 | Risk | Mitigation |
 |------|------------|
-| Project pause after 1 week idle | Weekly Supabase cron (`pg_cron`) or external ping; or upgrade to Pro ($25/mo) when live |
-| No point-in-time recovery | Periodic `pg_dump` via GitHub Action or manual export |
+| Project pause after 1 week idle | **GitHub Actions heartbeat every 3 days** → `/auth/v1/health` + DB RPC; see ADR-010 |
+| No point-in-time recovery | Weekly `pg_dump` via GitHub Actions artifact (optional) |
 | 500 MB database cap | Soft-delete already in schema; archive old FY if ever needed |
+
+**Note:** `pg_cron` inside Supabase does **not** wake a paused project — external ping is required.
 
 ---
 
@@ -188,13 +190,7 @@ Simplify: with &lt;10 users and 2 roles (admin/user), RLS can be straightforward
 
 ### UI library
 
-| Option | Notes |
-|--------|-------|
-| **React Native Paper** | Material Design, good forms |
-| **NativeWind** (Tailwind) | Familiar if coming from web Tailwind |
-| **gluestack-ui** | shadcn-like for RN |
-
-**Recommendation:** **NativeWind + custom components** — team already uses Tailwind; or **React Native Paper** for faster forms out of the box. Decide at project init.
+**Decision (ADR-011): Expo UI only** — `@expo/ui` and `@expo/ui/jetpack-compose`. No React Native Paper, NativeWind, or other third-party UI kits.
 
 ### State management
 
@@ -258,14 +254,24 @@ The existing PostgreSQL schema (`dbdiagram.dbml` + EF migrations) is **largely p
 
 ## 8. Open Questions
 
-| # | Question | Lean | Notes |
-|---|----------|------|-------|
-| 1 | iOS, Android, or both? | Both via Expo | Confirm with client |
-| 2 | App store distribution or internal APK/TestFlight? | Internal first | Faster iteration |
-| 3 | Keep web app for admin/desktop? | Defer | Mobile-first; web can remain in sample/ |
-| 4 | Multi-tenant in future? | No | Single org; simplifies RLS |
-| 5 | Offline bill drafts? | v2 | Online-first for MVP |
-| 6 | Upgrade to Supabase Pro when? | When going production | $25/mo removes pause, adds backups |
+**Resolved 2026-07-04** — see ADR-008 through ADR-012.
+
+| # | Question | Answer |
+|---|----------|--------|
+| 1 | iOS, Android, or both? | **Android only** v1; Windows desktop future |
+| 2 | Distribution? | **Internal APK** (sideload) |
+| 3 | Keep web app? | **No** — mobile-only v1 |
+| 4 | Supabase Pro? | **No** — free tier + heartbeat workaround |
+| 5 | UI library? | **Expo UI only** (`@expo/ui`) |
+| 6 | Offline bill drafts? | **v1.1** — online-first for MVP |
+
+**Still open:**
+
+| # | Question | Notes |
+|---|----------|-------|
+| 1 | Windows desktop stack? | Defer until mobile v1 ships |
+| 2 | Loads list in MVP or v1.1? | Lean v1.1 per ADR-012 |
+| 3 | Hardcode menus vs keep `app_menu` table? | Lean hardcode |
 
 ---
 

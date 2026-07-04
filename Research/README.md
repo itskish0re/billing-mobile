@@ -1,9 +1,8 @@
 # Billing Mobile — Research & Planning
 
-Planning and architecture decisions for migrating the Billing v3 application from a React + .NET Core client-server stack to a **React Native mobile app** backed by **Supabase** (free tier).
+Planning and architecture decisions for the Billing v3 mobile app: **Expo Android** + **Supabase free tier**.
 
-**Reference implementation:** [`sample/base-app/`](../sample/base-app/)  
-**Original blueprint:** [`sample/base-app/BILLING-V3.md`](../sample/base-app/BILLING-V3.md)
+**Reference:** [`sample/base-app/`](../sample/base-app/)
 
 ---
 
@@ -11,43 +10,46 @@ Planning and architecture decisions for migrating the Billing v3 application fro
 
 | # | Document | Purpose |
 |---|----------|---------|
-| 1 | [Base App Analysis](./01-base-app-analysis.md) | What exists today — domain, features, data model, API, frontend patterns |
-| 2 | [Architecture Brainstorm](./02-architecture-brainstorm.md) | Options compared, trade-offs, Supabase free-tier fit, open questions |
-| 3 | [Decision Log](./03-decision-log.md) | Summary of accepted decisions with status and links to ADRs |
-| 4 | [Implementation Roadmap](./04-implementation-roadmap.md) | Phased build plan for React Native + Supabase |
+| 1 | [Base App Analysis](./01-base-app-analysis.md) | Existing web/API codebase |
+| 2 | [Architecture Brainstorm](./02-architecture-brainstorm.md) | Options & Supabase mapping |
+| 3 | [Decision Log](./03-decision-log.md) | ADR index |
+| 4 | [Implementation Roadmap](./04-implementation-roadmap.md) | Phased build plan |
+| 5 | [Scope Reduction Summary](./05-scope-reduction-summary.md) | Cut / simplify / keep |
+| 6 | [Package Selection](./06-package-selection.md) | Dependencies (Expo UI aligned) |
+| 7 | [Pending Discussions](./07-pending-discussions.md) | Batch APIs, bill navigator |
 
-### Architecture Decision Records (ADRs)
+### ADRs
 
-| ADR | Title | Status |
-|-----|-------|--------|
-| [ADR-001](./decisions/ADR-001-mobile-first-react-native.md) | Mobile-first with React Native | **Accepted** |
-| [ADR-002](./decisions/ADR-002-supabase-backend.md) | Supabase as backend (replace .NET API) | **Accepted** |
-| [ADR-003](./decisions/ADR-003-expo-framework.md) | Expo for React Native toolchain | **Accepted** |
-| [ADR-004](./decisions/ADR-004-simplified-ui-metadata.md) | Simplified UI metadata on mobile | **Accepted** |
-| [ADR-005](./decisions/ADR-005-auth-and-rls.md) | Supabase Auth + RLS for access control | **Accepted** |
-| [ADR-006](./decisions/ADR-006-shared-business-logic.md) | Shared TypeScript business logic package | **Accepted** |
-| [ADR-007](./decisions/ADR-007-bill-print-strategy.md) | Bill memo / print via HTML + PDF | **Proposed** |
-
----
-
-## Context
-
-| Factor | Detail |
-|--------|--------|
-| User base | &lt; 10 users (single organization) |
-| Priority | Mobile functionality over desktop |
-| Current stack | React 19 + Vite SPA, .NET 10 Web API, PostgreSQL (Neon) |
-| Target stack | React Native (Expo) + Supabase (Postgres, Auth, Edge Functions) |
-| Motivation | Lower deployment and maintenance overhead for a small user base |
+| ADR | Title |
+|-----|-------|
+| [001](./decisions/ADR-001-mobile-first-react-native.md) | Mobile-first React Native |
+| [002](./decisions/ADR-002-supabase-backend.md) | Supabase backend |
+| [003](./decisions/ADR-003-expo-framework.md) | Expo toolchain |
+| [004](./decisions/ADR-004-simplified-ui-metadata.md) | No UI metadata port |
+| [005](./decisions/ADR-005-auth-and-rls.md) | Auth + RLS |
+| [006](./decisions/ADR-006-shared-business-logic.md) | Shared TS package |
+| [007](./decisions/ADR-007-bill-print-strategy.md) | Bill PDF (proposed) |
+| [008](./decisions/ADR-008-android-only-internal-apk.md) | Android APK |
+| [009](./decisions/ADR-009-mobile-only-no-web-v1.md) | Mobile-only v1 |
+| [010](./decisions/ADR-010-supabase-free-tier-only.md) | Free tier + heartbeat |
+| [011](./decisions/ADR-011-expo-ui-only.md) | Expo UI only |
+| [012](./decisions/ADR-012-scope-reduction.md) | Scope reduction |
+| [013](./decisions/ADR-013-mobile-navigation-ux.md) | Bottom tabs, cards, slide panels |
+| [014](./decisions/ADR-014-auth-profile-connectivity.md) | Auth, full name, offline gate |
 
 ---
 
-## How to use this folder
+## Current direction (2026-07-04)
 
-1. Read **01-base-app-analysis** to understand what must be ported.
-2. Read **02-architecture-brainstorm** for options and rationale.
-3. Check **03-decision-log** for the current agreed direction.
-4. Use **04-implementation-roadmap** when starting implementation.
-5. Add new decisions as `decisions/ADR-NNN-short-title.md` and update the decision log.
+| Area | Decision |
+|------|----------|
+| Platform | Android APK |
+| UI | `@expo/ui` + Jetpack Compose |
+| Navigation | **4 bottom tabs** — no drawer |
+| Lists | Cards → slide panel → edit → snackbar |
+| FY | Master CRUD in Masters tab; active picker in Settings |
+| Auth | Supabase, 1-day JWT, auto-refresh, SecureStore |
+| Pending | ~~Batch APIs, bill prev/next~~ — **resolved** |
+| Storage | **MMKV** prefs + **SecureStore** auth |
 
-**Last updated:** 2026-07-03
+**Last updated:** 2026-07-05

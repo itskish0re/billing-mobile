@@ -34,7 +34,7 @@ With Supabase, authorization moves to the database via **Row Level Security (RLS
 ### Financial year scoping
 
 - Replace `X-Financial-Year-Id` header with client-side `.eq('financial_year_id', selectedFyId)` on bill/load queries
-- Store selected FY in app context (AsyncStorage)
+- Store selected FY in app context (**MMKV** via Zustand persist)
 
 ## Consequences
 
