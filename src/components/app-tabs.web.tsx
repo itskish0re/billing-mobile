@@ -1,14 +1,19 @@
+import type { Href } from 'expo-router';
 import { Tabs, TabList, TabTrigger, TabSlot, TabTriggerSlotProps } from 'expo-router/ui';
-import { Pressable, StyleSheet } from 'react-native';
+import { Pressable, StyleSheet, useColorScheme } from 'react-native';
+
+import { resolveColorScheme, TabChrome } from '@/constants/brand';
 
 import { ThemedText } from './themed-text';
 import { ThemedView } from './themed-view';
 
 export default function AppTabs() {
+  const chrome = TabChrome[resolveColorScheme(useColorScheme())];
+
   return (
     <Tabs>
       <TabSlot style={{ height: '100%' }} />
-      <TabList style={styles.tabList}>
+      <TabList style={[styles.tabList, { borderTopColor: chrome.divider }]}>
         <TabTrigger name="index" href="/" asChild>
           <TabButton>Home</TabButton>
         </TabTrigger>
@@ -18,7 +23,7 @@ export default function AppTabs() {
         <TabTrigger name="masters" href="/masters" asChild>
           <TabButton>Masters</TabButton>
         </TabTrigger>
-        <TabTrigger name="settings" href="/settings" asChild>
+        <TabTrigger name="settings" href={'/settings' as Href} asChild>
           <TabButton>Settings</TabButton>
         </TabTrigger>
       </TabList>
@@ -40,6 +45,7 @@ function TabButton({ children, isFocused, ...props }: TabTriggerSlotProps) {
 
 const styles = StyleSheet.create({
   tabList: {
+    borderTopWidth: StyleSheet.hairlineWidth,
     flexDirection: 'row',
     justifyContent: 'space-around',
     padding: 8,

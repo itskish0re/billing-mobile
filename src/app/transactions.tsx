@@ -1,10 +1,10 @@
 import { ScreenShell } from '@/components/screen-shell';
+import { TransactionsScreen } from '@/components/transactions/transactions-screen';
 
-export default function TransactionsScreen() {
+export default function TransactionsRoute() {
   return (
-    <ScreenShell
-      title="Transactions"
-      subtitle="Bills and Loads tabs — ScrollableTabRow + HorizontalPager next"
-    />
+    <ScreenShell>
+      <TransactionsScreen />
+    </ScreenShell>
   );
 }

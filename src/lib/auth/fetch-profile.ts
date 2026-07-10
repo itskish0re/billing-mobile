@@ -19,7 +19,11 @@ export async function fetchProfile(userId: string): Promise<UserProfile | null> 
     .eq('id', userId)
     .maybeSingle();
 
-  if (error || !data) {
+  if (error) {
+    throw error;
+  }
+
+  if (!data) {
     return null;
   }
 

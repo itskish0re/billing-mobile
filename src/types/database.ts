@@ -9,6 +9,33 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      financial_year: {
+        Row: {
+          financial_year_id: number;
+          code: string;
+          name: string;
+          is_enabled: boolean;
+          is_active: boolean;
+          is_deleted: boolean;
+        };
+        Insert: {
+          financial_year_id?: number;
+          code: string;
+          name: string;
+          is_enabled?: boolean;
+          is_active?: boolean;
+          is_deleted?: boolean;
+        };
+        Update: {
+          financial_year_id?: number;
+          code?: string;
+          name?: string;
+          is_enabled?: boolean;
+          is_active?: boolean;
+          is_deleted?: boolean;
+        };
+        Relationships: [];
+      };
       profiles: {
         Row: {
           id: string;
@@ -34,6 +61,7 @@ export type Database = {
           created_at?: string;
           updated_at?: string;
         };
+        Relationships: [];
       };
     };
     Views: Record<string, never>;
@@ -48,5 +76,6 @@ export type Database = {
       };
     };
     Enums: Record<string, never>;
+    CompositeTypes: Record<string, never>;
   };
 };

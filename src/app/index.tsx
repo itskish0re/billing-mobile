@@ -10,7 +10,7 @@ import { Accordion } from '@/components/ui/accordion';
 
 export default function HomeScreen() {
   return (
-    <ScreenShell title="Home" subtitle="Bill form accordion test">
+    <ScreenShell>
       <Accordion type="multiple" defaultValue={['header']}>
         <BillFormAccordionSection
           value="header"

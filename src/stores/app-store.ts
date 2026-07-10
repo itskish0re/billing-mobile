@@ -8,8 +8,9 @@ type ThemeMode = 'light' | 'dark' | 'system';
 type AppState = {
   themeMode: ThemeMode;
   activeFinancialYearId: number | null;
+  activeFinancialYearLabel: string | null;
   setThemeMode: (mode: ThemeMode) => void;
-  setActiveFinancialYearId: (id: number | null) => void;
+  setActiveFinancialYear: (id: number, label: string) => void;
 };
 
 export const useAppStore = create<AppState>()(
@@ -17,8 +18,10 @@ export const useAppStore = create<AppState>()(
     (set) => ({
       themeMode: 'system',
       activeFinancialYearId: null,
+      activeFinancialYearLabel: null,
       setThemeMode: (themeMode) => set({ themeMode }),
-      setActiveFinancialYearId: (activeFinancialYearId) => set({ activeFinancialYearId }),
+      setActiveFinancialYear: (activeFinancialYearId, activeFinancialYearLabel) =>
+        set({ activeFinancialYearId, activeFinancialYearLabel }),
     }),
     {
       name: 'billing-app-store',
@@ -26,6 +29,7 @@ export const useAppStore = create<AppState>()(
       partialize: (state) => ({
         themeMode: state.themeMode,
         activeFinancialYearId: state.activeFinancialYearId,
+        activeFinancialYearLabel: state.activeFinancialYearLabel,
       }),
     }
   )

@@ -7,8 +7,10 @@ import { useColorScheme } from 'react-native';
 
 import AppTabs from '@/components/app-tabs';
 import { LoginScreen } from '@/components/login-screen';
-import { OfflineBanner } from '@/components/offline-banner';
+import { OfflineGate } from '@/components/offline-gate';
+import { TabChrome } from '@/constants/brand';
 import { Colors } from '@/constants/theme';
+import { useNetworkStatus } from '@/hooks/use-network-status';
 import { AppProviders } from '@/providers/app-providers';
 import { useAuth } from '@/providers/auth-provider';
 
@@ -19,19 +21,23 @@ function RootNavigator() {
   const scheme = colorScheme === 'unspecified' ? 'light' : colorScheme;
   const colors = Colors[scheme];
   const navigationTheme = scheme === 'dark' ? DarkTheme : DefaultTheme;
+  const { isChecking, isOffline } = useNetworkStatus();
   const { session, isLoading } = useAuth();
+  const isAppReady = !isChecking && (isOffline || !isLoading);
+  const chrome = TabChrome[scheme];
+  const statusBarBackground = session ? chrome.statusBar : colors.background;
 
   useEffect(() => {
-    SystemUI.setBackgroundColorAsync(colors.background).catch(() => undefined);
-  }, [colors.background]);
+    SystemUI.setBackgroundColorAsync(statusBarBackground).catch(() => undefined);
+  }, [statusBarBackground]);
 
   useEffect(() => {
-    if (!isLoading) {
+    if (isAppReady) {
       SplashScreen.hideAsync().catch(() => undefined);
     }
-  }, [isLoading]);
+  }, [isAppReady]);
 
-  if (isLoading) {
+  if (isChecking) {
     return null;
   }
 
@@ -49,8 +55,9 @@ function RootNavigator() {
         },
       }}>
       <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
-      <OfflineBanner />
-      {session ? <AppTabs /> : <LoginScreen />}
+      <OfflineGate>
+        {isLoading ? null : session ? <AppTabs /> : <LoginScreen />}
+      </OfflineGate>
     </ThemeProvider>
   );
 }
