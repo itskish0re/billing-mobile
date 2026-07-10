@@ -24,6 +24,7 @@ Architecture decisions for the Billing Mobile project. Each accepted decision ha
 | ADR-012 | Scope reduction — remove platform complexity | Accepted (refined) | 2026-07-04 |
 | ADR-013 | Bottom tab navigation, cards, slide panels | Accepted | 2026-07-04 |
 | ADR-014 | Auth, profile full name, offline gate | Accepted | 2026-07-04 |
+| ADR-015 | Publishable API keys + JWT signing keys | Accepted | 2026-07-05 |
 
 ---
 

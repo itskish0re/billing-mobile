@@ -36,6 +36,7 @@ Planning and architecture decisions for the Billing v3 mobile app: **Expo Androi
 | [012](./decisions/ADR-012-scope-reduction.md) | Scope reduction |
 | [013](./decisions/ADR-013-mobile-navigation-ux.md) | Bottom tabs, cards, slide panels |
 | [014](./decisions/ADR-014-auth-profile-connectivity.md) | Auth, full name, offline gate |
+| [015](./decisions/ADR-015-supabase-api-keys-and-jwt-signing.md) | Publishable keys + JWT signing keys |
 
 ---
 
@@ -48,7 +49,7 @@ Planning and architecture decisions for the Billing v3 mobile app: **Expo Androi
 | Navigation | **4 bottom tabs** — no drawer |
 | Lists | Cards → slide panel → edit → snackbar |
 | FY | Master CRUD in Masters tab; active picker in Settings |
-| Auth | Supabase, 1-day JWT, auto-refresh, SecureStore |
+| Auth | Supabase, publishable key, JWT signing keys, 1-day session |
 | Pending | ~~Batch APIs, bill prev/next~~ — **resolved** |
 | Storage | **MMKV** prefs + **SecureStore** auth |
 

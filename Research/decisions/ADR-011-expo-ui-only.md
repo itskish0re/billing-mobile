@@ -39,10 +39,16 @@ Expo UI (`@expo/ui`, SDK 56+) provides native components backed by **Jetpack Com
 ### Project template
 
 ```bash
-npx create-expo-app@latest --template default@sdk-56
+npx create-expo-app@latest --template default@sdk-57
 ```
 
 SDK 56 default template includes Expo UI. Pin `@expo/ui` to SDK-compatible version.
+
+**Project uses Expo SDK 57** — create with:
+
+```bash
+npx create-expo-app@latest . --template default@sdk-57
+```
 
 ### Android-first component strategy
 
