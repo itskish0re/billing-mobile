@@ -1,8 +1,15 @@
-import { Button, Text, TextInput } from '@expo/ui';
+import { Text } from '@expo/ui';
 import { StyleSheet, View } from 'react-native';
 
 import { TransactionsDateFilterField } from '@/components/transactions/transactions-date-filter-field';
-import { useTransactionsFilters } from '@/hooks/use-transactions-filters';
+import { TransactionsFilterAccordion } from '@/components/transactions/transactions-filter-accordion';
+import { AppTabRow, type AppTabItem } from '@/components/ui/tab-row';
+import { useTransactionsFilters, type TransactionsTab } from '@/hooks/use-transactions-filters';
+
+const TRANSACTION_TABS: AppTabItem<TransactionsTab>[] = [
+  { id: 'bills', label: 'Bills' },
+  { id: 'loads', label: 'Loads' },
+];
 
 export function TransactionsScreen() {
   const {
@@ -19,9 +26,17 @@ export function TransactionsScreen() {
     setActiveTab,
   } = useTransactionsFilters();
 
+  const selectedIndex = activeTab === 'bills' ? 0 : 1;
+
   return (
     <View style={styles.container}>
-      <View style={styles.dateRow}>
+      <AppTabRow
+        tabs={TRANSACTION_TABS}
+        selectedIndex={selectedIndex}
+        onTabSelected={(_index, tab) => setActiveTab(tab.id)}
+      />
+
+      <TransactionsFilterAccordion onSearchQueryChange={setSearchQuery}>
         <TransactionsDateFilterField
           label="Start date"
           date={startDate}
@@ -36,22 +51,7 @@ export function TransactionsScreen() {
           onDateSelected={setEndDate}
           onClear={clearEndDate}
         />
-      </View>
-
-      <TextInput placeholder="Search bills and loads" onChangeText={setSearchQuery} />
-
-      <View style={styles.tabRow}>
-        <Button
-          label="Bills"
-          variant={activeTab === 'bills' ? 'filled' : 'outlined'}
-          onPress={() => setActiveTab('bills')}
-        />
-        <Button
-          label="Loads"
-          variant={activeTab === 'loads' ? 'filled' : 'outlined'}
-          onPress={() => setActiveTab('loads')}
-        />
-      </View>
+      </TransactionsFilterAccordion>
 
       <Text textStyle={styles.placeholder}>
         {activeTab === 'bills'
@@ -70,14 +70,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     gap: 12,
-  },
-  dateRow: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  tabRow: {
-    flexDirection: 'row',
-    gap: 8,
   },
   placeholder: {
     flex: 1,

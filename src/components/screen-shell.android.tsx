@@ -13,9 +13,19 @@ import { BRAND_SEED_COLOR } from '@/constants/brand';
 
 export type ScreenShellProps = {
   children?: ReactNode;
+  horizontalPadding?: number;
+  topPadding?: number;
 };
 
-function ScreenBody({ children }: { children?: ReactNode }) {
+function ScreenBody({
+  children,
+  horizontalPadding = 16,
+  topPadding = 16,
+}: {
+  children?: ReactNode;
+  horizontalPadding?: number;
+  topPadding?: number;
+}) {
   const colors = useMaterialColors();
 
   return (
@@ -24,7 +34,7 @@ function ScreenBody({ children }: { children?: ReactNode }) {
         fillMaxWidth(),
         weight(1),
         background(colors.surface),
-        padding(16, 16, 16, 16),
+        padding(horizontalPadding, topPadding, horizontalPadding, 16),
       ]}
       verticalArrangement={{ spacedBy: 12 }}>
       {children}
@@ -32,23 +42,35 @@ function ScreenBody({ children }: { children?: ReactNode }) {
   );
 }
 
-export function ScreenShell({ children }: ScreenShellProps) {
+export function ScreenShell({
+  children,
+  horizontalPadding,
+  topPadding,
+}: ScreenShellProps) {
   return (
     <View style={styles.root}>
       <Host style={styles.host} seedColor={BRAND_SEED_COLOR}>
-        <ScreenShellContent>{children}</ScreenShellContent>
+        <ScreenShellContent horizontalPadding={horizontalPadding} topPadding={topPadding}>
+          {children}
+        </ScreenShellContent>
       </Host>
     </View>
   );
 }
 
-function ScreenShellContent({ children }: ScreenShellProps) {
+function ScreenShellContent({
+  children,
+  horizontalPadding,
+  topPadding,
+}: ScreenShellProps) {
   const colors = useMaterialColors();
 
   return (
     <ComposeColumn modifiers={[fillMaxSize()]}>
       <TabHeader />
-      <ScreenBody>{children}</ScreenBody>
+      <ScreenBody horizontalPadding={horizontalPadding} topPadding={topPadding}>
+        {children}
+      </ScreenBody>
       <HorizontalDivider thickness={1} color={colors.outlineVariant} />
     </ComposeColumn>
   );

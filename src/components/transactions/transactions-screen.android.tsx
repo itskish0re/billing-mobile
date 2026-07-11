@@ -1,11 +1,6 @@
 import {
   Column,
-  DockedSearchBar,
   HorizontalPager,
-  Icon,
-  Row,
-  SegmentedButton,
-  SingleChoiceSegmentedButtonRow,
   Text,
   useMaterialColors,
   type HorizontalPagerHandle,
@@ -14,9 +9,15 @@ import { fillMaxSize, fillMaxWidth, weight } from '@expo/ui/jetpack-compose/modi
 import { useRef } from 'react';
 
 import { TransactionsDateFilterField } from '@/components/transactions/transactions-date-filter-field';
-import { useTransactionsFilters } from '@/hooks/use-transactions-filters';
+import { TransactionsFilterAccordion } from '@/components/transactions/transactions-filter-accordion';
+import { AppTabRow, type AppTabItem } from '@/components/ui/tab-row';
+import { usePagerTabPosition } from '@/hooks/use-pager-tab-position';
+import { useTransactionsFilters, type TransactionsTab } from '@/hooks/use-transactions-filters';
 
-const SEARCH_ICON = require('@/assets/icons/search.xml');
+const TRANSACTION_TABS: AppTabItem<TransactionsTab>[] = [
+  { id: 'bills', label: 'Bills' },
+  { id: 'loads', label: 'Loads' },
+];
 
 function TransactionListPlaceholder({ title }: { title: string }) {
   const colors = useMaterialColors();
@@ -34,7 +35,6 @@ function TransactionListPlaceholder({ title }: { title: string }) {
 }
 
 export function TransactionsScreen() {
-  const colors = useMaterialColors();
   const pagerRef = useRef<HorizontalPagerHandle>(null);
   const {
     startDate,
@@ -50,17 +50,26 @@ export function TransactionsScreen() {
     setActiveTab,
   } = useTransactionsFilters();
 
-  const activeTabIndex = activeTab === 'bills' ? 0 : 1;
+  const selectedIndex = activeTab === 'bills' ? 0 : 1;
+  const { pagePosition, handlePageScroll, handleSettledPage, selectPage } =
+    usePagerTabPosition(selectedIndex);
 
-  const selectTab = (tab: 'bills' | 'loads') => {
-    const nextIndex = tab === 'bills' ? 0 : 1;
-    setActiveTab(tab);
-    void pagerRef.current?.scrollToPage(nextIndex);
+  const selectTab = (index: number, tab: AppTabItem<TransactionsTab>) => {
+    selectPage(index);
+    setActiveTab(tab.id);
+    void pagerRef.current?.animateScrollToPage(index);
   };
 
   return (
-    <Column modifiers={[fillMaxWidth(), weight(1)]} verticalArrangement={{ spacedBy: 12 }}>
-      <Row modifiers={[fillMaxWidth()]} horizontalArrangement={{ spacedBy: 12 }} verticalAlignment="top">
+    <Column modifiers={[fillMaxWidth(), weight(1)]} verticalArrangement={{ spacedBy: 0 }}>
+      <AppTabRow
+        tabs={TRANSACTION_TABS}
+        selectedIndex={selectedIndex}
+        pagePosition={pagePosition}
+        onTabSelected={selectTab}
+      />
+
+      <TransactionsFilterAccordion onSearchQueryChange={setSearchQuery}>
         <TransactionsDateFilterField
           label="Start date"
           date={startDate}
@@ -75,36 +84,19 @@ export function TransactionsScreen() {
           onDateSelected={setEndDate}
           onClear={clearEndDate}
         />
-      </Row>
-
-      <DockedSearchBar onQueryChange={setSearchQuery} modifiers={[fillMaxWidth()]}>
-        <DockedSearchBar.Placeholder>
-          <Text color={colors.onSurfaceVariant}>Search bills and loads</Text>
-        </DockedSearchBar.Placeholder>
-        <DockedSearchBar.LeadingIcon>
-          <Icon source={SEARCH_ICON} size={20} tint={colors.onSurfaceVariant} />
-        </DockedSearchBar.LeadingIcon>
-      </DockedSearchBar>
-
-      <SingleChoiceSegmentedButtonRow modifiers={[fillMaxWidth()]}>
-        <SegmentedButton selected={activeTab === 'bills'} onClick={() => selectTab('bills')}>
-          <SegmentedButton.Label>
-            <Text>Bills</Text>
-          </SegmentedButton.Label>
-        </SegmentedButton>
-        <SegmentedButton selected={activeTab === 'loads'} onClick={() => selectTab('loads')}>
-          <SegmentedButton.Label>
-            <Text>Loads</Text>
-          </SegmentedButton.Label>
-        </SegmentedButton>
-      </SingleChoiceSegmentedButtonRow>
+      </TransactionsFilterAccordion>
 
       <HorizontalPager
         ref={pagerRef}
-        initialPage={activeTabIndex}
+        initialPage={selectedIndex}
         modifiers={[fillMaxWidth(), weight(1)]}
+        onPageScroll={handlePageScroll}
+        onCurrentPageChange={(page) => {
+          setActiveTab(page === 0 ? 'bills' : 'loads');
+        }}
         onSettledPageChange={(page) => {
           setActiveTab(page === 0 ? 'bills' : 'loads');
+          handleSettledPage(page);
         }}>
         <TransactionListPlaceholder
           title={searchQuery ? `No bills match "${searchQuery}"` : 'Bills will appear here'}

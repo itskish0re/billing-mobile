@@ -1,0 +1,6 @@
+export const TAB_HORIZONTAL_PADDING = 16;
+export const TAB_VERTICAL_PADDING_TOP = 12;
+export const TAB_VERTICAL_PADDING_BOTTOM = 8;
+export const TAB_INDICATOR_HEIGHT = 3;
+export const TAB_LABEL_LINE_HEIGHT = 22;
+export const TAB_LABEL_FONT_SIZE = 16;

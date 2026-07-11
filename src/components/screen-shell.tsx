@@ -8,9 +8,15 @@ import { BRAND_SEED_COLOR, resolveColorScheme, TabChrome } from '@/constants/bra
 
 export type ScreenShellProps = {
   children?: ReactNode;
+  horizontalPadding?: number;
+  topPadding?: number;
 };
 
-export function ScreenShell({ children }: ScreenShellProps) {
+export function ScreenShell({
+  children,
+  horizontalPadding = 16,
+  topPadding = 16,
+}: ScreenShellProps) {
   const chrome = TabChrome[resolveColorScheme(useColorScheme())];
 
   return (
@@ -18,7 +24,13 @@ export function ScreenShell({ children }: ScreenShellProps) {
       <Host style={styles.host} seedColor={BRAND_SEED_COLOR}>
         <View style={styles.column}>
           <TabHeader />
-          <Column spacing={12} style={styles.content}>
+          <Column
+            spacing={12}
+            style={{
+              ...styles.content,
+              paddingHorizontal: horizontalPadding,
+              paddingTop: topPadding,
+            }}>
             {children}
           </Column>
           <View style={[styles.tabBorder, { backgroundColor: chrome.divider }]} />
@@ -40,8 +52,7 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    paddingHorizontal: 16,
-    paddingTop: 16,
+    paddingBottom: 16,
   },
   tabBorder: {
     height: StyleSheet.hairlineWidth,
