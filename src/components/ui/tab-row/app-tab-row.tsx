@@ -1,16 +1,17 @@
 import { Button } from '@expo/ui';
 import { ScrollView, StyleSheet, View } from 'react-native';
-import type { SharedValue } from 'react-native-reanimated';
 
 import type { AppTabItem } from '@/components/ui/tab-row/types';
+import type { PagerTabPosition } from '@/hooks/use-pager-tab-position';
 
 type AppTabRowProps<T extends string> = {
   tabs: AppTabItem<T>[];
   selectedIndex: number;
-  pagePosition?: SharedValue<number>;
+  pagePosition?: PagerTabPosition;
   onTabSelected: (index: number, tab: AppTabItem<T>) => void;
 };
 
+/** Non-Android fallback — Masters/Transactions ship Android-only for v1. */
 export function AppTabRow<T extends string>({
   tabs,
   selectedIndex,

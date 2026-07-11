@@ -7,14 +7,19 @@ import {
 } from 'react';
 import { Alert } from 'react-native';
 
+export type ShowSnackbarOptions = {
+  variant?: 'success' | 'error';
+  durationMs?: number;
+};
+
 type SnackbarContextValue = {
-  showSnackbar: (message: string) => Promise<void>;
+  showSnackbar: (message: string, options?: ShowSnackbarOptions) => Promise<void>;
 };
 
 const SnackbarContext = createContext<SnackbarContextValue | null>(null);
 
 export function SnackbarProvider({ children }: { children: ReactNode }) {
-  const showSnackbar = useCallback(async (message: string) => {
+  const showSnackbar = useCallback(async (message: string, _options?: ShowSnackbarOptions) => {
     Alert.alert('', message);
   }, []);
 

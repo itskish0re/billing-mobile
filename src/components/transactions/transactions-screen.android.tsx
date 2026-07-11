@@ -89,6 +89,7 @@ export function TransactionsScreen() {
       <HorizontalPager
         ref={pagerRef}
         initialPage={selectedIndex}
+        userScrollEnabled={false}
         modifiers={[fillMaxWidth(), weight(1)]}
         onPageScroll={handlePageScroll}
         onCurrentPageChange={(page) => {

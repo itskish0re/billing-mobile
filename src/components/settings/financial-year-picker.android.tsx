@@ -31,7 +31,7 @@ export function FinancialYearPicker() {
     setActiveFinancialYear(year.financial_year_id, year.name);
     void displayValue.set(year.name);
     setExpanded(false);
-    await showSnackbar(`Financial year set to ${year.name}`);
+    await showSnackbar(`Financial year set to ${year.name}`, { variant: 'success' });
   };
 
   return (

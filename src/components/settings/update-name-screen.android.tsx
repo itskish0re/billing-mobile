@@ -49,7 +49,7 @@ export function UpdateNameScreen() {
       return;
     }
 
-    await showSnackbar('Name updated successfully');
+    await showSnackbar('Name updated successfully', { variant: 'success' });
     setIsSaving(false);
     router.back();
   };

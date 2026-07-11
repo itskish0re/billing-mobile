@@ -6,7 +6,7 @@ import {
   ExitTransition,
   HorizontalDivider,
   Icon,
-  ListItem,
+  Row,
   Text,
   useMaterialColors,
 } from '@expo/ui/jetpack-compose';
@@ -20,8 +20,8 @@ import {
 } from '@expo/ui/jetpack-compose/modifiers';
 import { type ReactNode, useState } from 'react';
 
-const CHEVRON_ICON = require('@/assets/icons/keyboard_arrow_down.xml');
 const SEARCH_ICON = require('@/assets/icons/search.xml');
+const CHEVRON_ICON = require('@/assets/icons/keyboard_arrow_down.xml');
 
 const ENTER = EnterTransition.expandVertically().plus(EnterTransition.fadeIn());
 const EXIT = ExitTransition.shrinkVertically().plus(ExitTransition.fadeOut());
@@ -32,6 +32,11 @@ export type FilterAccordionProps = {
   children?: ReactNode;
 };
 
+/**
+ * Border-style filter accordion built with Expo UI primitives (not the custom
+ * native module). Keeps React children mounted so useNativeState in date fields
+ * is not released when collapsing.
+ */
 export function FilterAccordion({
   searchPlaceholder,
   onSearchQueryChange,
@@ -42,28 +47,22 @@ export function FilterAccordion({
 
   return (
     <Column modifiers={[fillMaxWidth()]}>
-      <ListItem
-        colors={{ containerColor: 'transparent' }}
-        modifiers={[
-          fillMaxWidth(),
-          padding(16, 0, 16, 0),
-          clickable(() => setIsOpen((open) => !open)),
-        ]}>
-        <ListItem.HeadlineContent>
-          <Text style={{ typography: 'titleSmall' }}>Filter</Text>
-        </ListItem.HeadlineContent>
-
-        <ListItem.TrailingContent>
-          <Icon
-            source={CHEVRON_ICON}
-            modifiers={[graphicsLayer({ rotationZ: animated(isOpen ? 180 : 0, spring()) })]}
-          />
-        </ListItem.TrailingContent>
-      </ListItem>
+      <Row
+        modifiers={[fillMaxWidth(), clickable(() => setIsOpen((open) => !open)), padding(16, 12, 16, 12)]}
+        horizontalArrangement="spaceBetween"
+        verticalAlignment="center">
+        <Text style={{ typography: 'titleSmall' }}>Filter</Text>
+        <Icon
+          source={CHEVRON_ICON}
+          size={24}
+          tint={colors.onSurfaceVariant}
+          modifiers={[graphicsLayer({ rotationZ: animated(isOpen ? 180 : 0, spring()) })]}
+        />
+      </Row>
 
       <AnimatedVisibility visible={isOpen} enterTransition={ENTER} exitTransition={EXIT}>
         <Column
-          modifiers={[fillMaxWidth(), padding(16, 16, 16, 16)]}
+          modifiers={[fillMaxWidth(), padding(16, 0, 16, 16)]}
           verticalArrangement={{ spacedBy: 12 }}>
           {children}
 

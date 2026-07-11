@@ -1,112 +1,125 @@
 import {
+  Box,
   Column,
   DockedSearchBar,
-  HorizontalPager,
+  FloatingActionButton,
   Icon,
   Text,
   useMaterialColors,
-  type HorizontalPagerHandle,
 } from '@expo/ui/jetpack-compose';
-import { fillMaxSize, fillMaxWidth, padding, weight } from '@expo/ui/jetpack-compose/modifiers';
-import { useRef, useState } from 'react';
+import {
+  align,
+  fillMaxSize,
+  fillMaxWidth,
+  offset,
+  padding,
+  weight,
+} from '@expo/ui/jetpack-compose/modifiers';
+import { useEffect, useState } from 'react';
 
-import { AppTabRow, type AppTabItem } from '@/components/ui/tab-row';
+import { MASTERS_TABS } from '@/components/masters/masters-config';
+import { MastersEntityList } from '@/components/masters/masters-entity-list';
+import {
+  MastersFormPanel,
+  type MastersFormMode,
+} from '@/components/masters/masters-form-panel';
+import type { MasterListRow, MastersTab } from '@/components/masters/masters-types';
+import { AppTabRow } from '@/components/ui/tab-row';
 import { usePagerTabPosition } from '@/hooks/use-pager-tab-position';
 
 const SEARCH_ICON = require('@/assets/icons/search.xml');
+const ADD_ICON = require('@/assets/icons/add.xml');
 
-export type MastersTab =
-  | 'name-boards'
-  | 'trucks'
-  | 'locations'
-  | 'parties'
-  | 'goods'
-  | 'units'
-  | 'financial-years';
-
-const MASTERS_TABS: AppTabItem<MastersTab>[] = [
-  { id: 'name-boards', label: 'Name boards' },
-  { id: 'trucks', label: 'Trucks' },
-  { id: 'locations', label: 'Locations' },
-  { id: 'parties', label: 'Parties' },
-  { id: 'goods', label: 'Goods' },
-  { id: 'units', label: 'Units' },
-  { id: 'financial-years', label: 'Financial years' },
-];
-
-function MastersListPlaceholder({ title }: { title: string }) {
-  const colors = useMaterialColors();
-
-  return (
-    <Column
-      modifiers={[fillMaxSize()]}
-      horizontalAlignment="center"
-      verticalArrangement="center">
-      <Text color={colors.onSurfaceVariant} style={{ typography: 'bodyLarge' }}>
-        {title}
-      </Text>
-    </Column>
-  );
-}
+export type { MastersTab };
 
 export function MastersScreen() {
   const colors = useMaterialColors();
-  const pagerRef = useRef<HorizontalPagerHandle>(null);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
-  const { pagePosition, handlePageScroll, handleSettledPage, selectPage } = usePagerTabPosition(0);
+  const [formVisible, setFormVisible] = useState(false);
+  const [formMode, setFormMode] = useState<MastersFormMode>('create');
+  const [editingRow, setEditingRow] = useState<MasterListRow | null>(null);
+  const { pagePosition, selectPage } = usePagerTabPosition(0);
 
   const activeTab = MASTERS_TABS[selectedIndex];
   const searchPlaceholder = `Search ${activeTab.label.toLowerCase()}`;
+
+  useEffect(() => {
+    selectPage(selectedIndex);
+  }, [selectedIndex]);
 
   const selectTab = (index: number) => {
     selectPage(index);
     setSelectedIndex(index);
     setSearchQuery('');
-    void pagerRef.current?.animateScrollToPage(index);
+    setFormVisible(false);
+    setEditingRow(null);
+  };
+
+  const openCreate = () => {
+    setFormMode('create');
+    setEditingRow(null);
+    setFormVisible(true);
+  };
+
+  const openEdit = (row: MasterListRow) => {
+    setFormMode('edit');
+    setEditingRow(row);
+    setFormVisible(true);
+  };
+
+  const closeForm = () => {
+    setFormVisible(false);
+    setEditingRow(null);
   };
 
   return (
-    <Column modifiers={[fillMaxWidth(), weight(1)]} verticalArrangement={{ spacedBy: 0 }}>
-      <AppTabRow
-        tabs={MASTERS_TABS}
-        selectedIndex={selectedIndex}
-        pagePosition={pagePosition}
-        onTabSelected={selectTab}
-      />
+    <Box modifiers={[fillMaxWidth(), weight(1)]}>
+      <Column modifiers={[fillMaxSize()]} verticalArrangement={{ spacedBy: 0 }}>
+        <AppTabRow
+          tabs={MASTERS_TABS}
+          selectedIndex={selectedIndex}
+          pagePosition={pagePosition}
+          onTabSelected={selectTab}
+        />
 
-      <Column modifiers={[fillMaxWidth(), padding(16, 16, 16, 16)]}>
-        <DockedSearchBar onQueryChange={setSearchQuery} modifiers={[fillMaxWidth()]}>
-          <DockedSearchBar.Placeholder>
-            <Text color={colors.onSurfaceVariant}>{searchPlaceholder}</Text>
-          </DockedSearchBar.Placeholder>
-          <DockedSearchBar.LeadingIcon>
-            <Icon source={SEARCH_ICON} size={20} tint={colors.onSurfaceVariant} />
-          </DockedSearchBar.LeadingIcon>
-        </DockedSearchBar>
+        <Column modifiers={[fillMaxWidth(), padding(16, 16, 16, 16)]}>
+          <DockedSearchBar onQueryChange={setSearchQuery} modifiers={[fillMaxWidth()]}>
+            <DockedSearchBar.Placeholder>
+              <Text color={colors.onSurfaceVariant}>{searchPlaceholder}</Text>
+            </DockedSearchBar.Placeholder>
+            <DockedSearchBar.LeadingIcon>
+              <Icon source={SEARCH_ICON} size={20} tint={colors.onSurfaceVariant} />
+            </DockedSearchBar.LeadingIcon>
+          </DockedSearchBar>
+        </Column>
+
+        <MastersEntityList
+          key={activeTab.id}
+          tab={activeTab.id}
+          searchQuery={searchQuery}
+          onEdit={openEdit}
+          interactionEnabled={!formVisible}
+        />
       </Column>
 
-      <HorizontalPager
-        ref={pagerRef}
-        initialPage={selectedIndex}
-        modifiers={[fillMaxWidth(), weight(1)]}
-        onPageScroll={handlePageScroll}
-        onCurrentPageChange={setSelectedIndex}
-        onSettledPageChange={(page) => {
-          setSelectedIndex(page);
-          handleSettledPage(page);
-        }}>
-        {MASTERS_TABS.map((tab) => (
-          <MastersListPlaceholder
-            key={tab.id}
-            title={
-              searchQuery
-                ? `No ${tab.label.toLowerCase()} match "${searchQuery}"`
-                : `${tab.label} will appear here`
-            }
-          />
-        ))}
-      </HorizontalPager>
-    </Column>
+      {!formVisible ? (
+        <FloatingActionButton
+          modifiers={[align('bottomEnd'), offset(-16, -16)]}
+          onClick={openCreate}>
+          <FloatingActionButton.Icon>
+            <Icon source={ADD_ICON} size={24} />
+          </FloatingActionButton.Icon>
+        </FloatingActionButton>
+      ) : null}
+
+      <MastersFormPanel
+        tab={activeTab.id}
+        visible={formVisible}
+        mode={formMode}
+        initialRow={editingRow}
+        onClose={closeForm}
+      />
+    </Box>
   );
 }

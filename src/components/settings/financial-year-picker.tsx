@@ -25,7 +25,7 @@ export function FinancialYearPicker() {
           variant={year.financial_year_id === activeFinancialYearId ? 'filled' : 'outlined'}
           onPress={() => {
             setActiveFinancialYear(year.financial_year_id, year.name);
-            void showSnackbar(`Financial year set to ${year.name}`);
+            void showSnackbar(`Financial year set to ${year.name}`, { variant: 'success' });
           }}
         />
       ))}
