@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { AuthProvider } from '@/providers/auth-provider';
+import { BillFormProvider } from '@/providers/bill-form-provider';
 import { NetworkProvider } from '@/providers/network-provider';
 import { SnackbarProvider } from '@/providers/snackbar-provider';
 
@@ -21,7 +22,9 @@ export function AppProviders({ children }: { children: ReactNode }) {
       <NetworkProvider>
         <AuthProvider>
           <QueryClientProvider client={queryClient}>
-            <SnackbarProvider>{children}</SnackbarProvider>
+            <SnackbarProvider>
+              <BillFormProvider>{children}</BillFormProvider>
+            </SnackbarProvider>
           </QueryClientProvider>
         </AuthProvider>
       </NetworkProvider>

@@ -1,11 +1,20 @@
 import {
+  Box,
   Column,
+  FloatingActionButton,
   HorizontalPager,
+  Icon,
   Text,
   useMaterialColors,
   type HorizontalPagerHandle,
 } from '@expo/ui/jetpack-compose';
-import { fillMaxSize, fillMaxWidth, weight } from '@expo/ui/jetpack-compose/modifiers';
+import {
+  align,
+  fillMaxSize,
+  fillMaxWidth,
+  offset,
+  weight,
+} from '@expo/ui/jetpack-compose/modifiers';
 import { useRef } from 'react';
 
 import { TransactionsDateFilterField } from '@/components/transactions/transactions-date-filter-field';
@@ -13,6 +22,9 @@ import { TransactionsFilterAccordion } from '@/components/transactions/transacti
 import { AppTabRow, type AppTabItem } from '@/components/ui/tab-row';
 import { usePagerTabPosition } from '@/hooks/use-pager-tab-position';
 import { useTransactionsFilters, type TransactionsTab } from '@/hooks/use-transactions-filters';
+import { useBillForm } from '@/providers/bill-form-provider';
+
+const ADD_ICON = require('@/assets/icons/add.xml');
 
 const TRANSACTION_TABS: AppTabItem<TransactionsTab>[] = [
   { id: 'bills', label: 'Bills' },
@@ -36,6 +48,7 @@ function TransactionListPlaceholder({ title }: { title: string }) {
 
 export function TransactionsScreen() {
   const pagerRef = useRef<HorizontalPagerHandle>(null);
+  const { openCreate, isOpen: billFormOpen } = useBillForm();
   const {
     startDate,
     endDate,
@@ -60,52 +73,66 @@ export function TransactionsScreen() {
     void pagerRef.current?.animateScrollToPage(index);
   };
 
+  const showBillFab = activeTab === 'bills' && !billFormOpen;
+
   return (
-    <Column modifiers={[fillMaxWidth(), weight(1)]} verticalArrangement={{ spacedBy: 0 }}>
-      <AppTabRow
-        tabs={TRANSACTION_TABS}
-        selectedIndex={selectedIndex}
-        pagePosition={pagePosition}
-        onTabSelected={selectTab}
-      />
+    <Box modifiers={[fillMaxWidth(), weight(1)]}>
+      <Column modifiers={[fillMaxWidth(), weight(1)]} verticalArrangement={{ spacedBy: 0 }}>
+        <AppTabRow
+          tabs={TRANSACTION_TABS}
+          selectedIndex={selectedIndex}
+          pagePosition={pagePosition}
+          onTabSelected={selectTab}
+        />
 
-      <TransactionsFilterAccordion onSearchQueryChange={setSearchQuery}>
-        <TransactionsDateFilterField
-          label="Start date"
-          date={startDate}
-          error={fieldErrors.startDate}
-          onDateSelected={setStartDate}
-          onClear={clearStartDate}
-        />
-        <TransactionsDateFilterField
-          label="End date"
-          date={endDate}
-          error={fieldErrors.endDate}
-          onDateSelected={setEndDate}
-          onClear={clearEndDate}
-        />
-      </TransactionsFilterAccordion>
+        <TransactionsFilterAccordion onSearchQueryChange={setSearchQuery}>
+          <TransactionsDateFilterField
+            label="Start date"
+            date={startDate}
+            error={fieldErrors.startDate}
+            onDateSelected={setStartDate}
+            onClear={clearStartDate}
+          />
+          <TransactionsDateFilterField
+            label="End date"
+            date={endDate}
+            error={fieldErrors.endDate}
+            onDateSelected={setEndDate}
+            onClear={clearEndDate}
+          />
+        </TransactionsFilterAccordion>
 
-      <HorizontalPager
-        ref={pagerRef}
-        initialPage={selectedIndex}
-        userScrollEnabled={false}
-        modifiers={[fillMaxWidth(), weight(1)]}
-        onPageScroll={handlePageScroll}
-        onCurrentPageChange={(page) => {
-          setActiveTab(page === 0 ? 'bills' : 'loads');
-        }}
-        onSettledPageChange={(page) => {
-          setActiveTab(page === 0 ? 'bills' : 'loads');
-          handleSettledPage(page);
-        }}>
-        <TransactionListPlaceholder
-          title={searchQuery ? `No bills match "${searchQuery}"` : 'Bills will appear here'}
-        />
-        <TransactionListPlaceholder
-          title={searchQuery ? `No loads match "${searchQuery}"` : 'Loads will appear here'}
-        />
-      </HorizontalPager>
-    </Column>
+        <HorizontalPager
+          ref={pagerRef}
+          initialPage={selectedIndex}
+          userScrollEnabled={false}
+          modifiers={[fillMaxWidth(), weight(1)]}
+          onPageScroll={handlePageScroll}
+          onCurrentPageChange={(page) => {
+            setActiveTab(page === 0 ? 'bills' : 'loads');
+          }}
+          onSettledPageChange={(page) => {
+            setActiveTab(page === 0 ? 'bills' : 'loads');
+            handleSettledPage(page);
+          }}>
+          <TransactionListPlaceholder
+            title={searchQuery ? `No bills match "${searchQuery}"` : 'Bills will appear here'}
+          />
+          <TransactionListPlaceholder
+            title={searchQuery ? `No loads match "${searchQuery}"` : 'Loads will appear here'}
+          />
+        </HorizontalPager>
+      </Column>
+
+      {showBillFab ? (
+        <FloatingActionButton
+          modifiers={[align('bottomEnd'), offset(-16, -16)]}
+          onClick={openCreate}>
+          <FloatingActionButton.Icon>
+            <Icon source={ADD_ICON} size={24} />
+          </FloatingActionButton.Icon>
+        </FloatingActionButton>
+      ) : null}
+    </Box>
   );
 }

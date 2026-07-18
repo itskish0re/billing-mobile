@@ -34,12 +34,19 @@ const CLOSE_ICON = require('@/assets/icons/close.xml');
 
 export type MastersFormMode = 'create' | 'edit';
 
+/** `side` = masters slide-over (~88%). `full` reserved; bill form uses its own panel. */
+export type MastersFormPresentation = 'side' | 'full';
+
 export type MastersFormPanelProps = {
   tab: MastersTab;
   visible: boolean;
   mode: MastersFormMode;
   initialRow?: MasterListRow | null;
+  /** Default `side`. Use when stacking over the bill form. */
+  presentation?: MastersFormPresentation;
   onClose: () => void;
+  /** Called after a successful create/update (before snackbar). */
+  onSaved?: () => void;
 };
 
 type FieldState = {
@@ -115,7 +122,9 @@ export function MastersFormPanel({
   visible,
   mode,
   initialRow,
+  presentation = 'side',
   onClose,
+  onSaved,
 }: MastersFormPanelProps) {
   const colors = useMaterialColors();
   const config = MASTER_ENTITY_CONFIG[tab];
@@ -125,6 +134,7 @@ export function MastersFormPanel({
   const fieldStates = useRef<Record<string, FieldState>>({});
 
   const formIdentity = `${tab}-${mode}-${initialRow?.id ?? 'new'}`;
+  const isFullWidth = presentation === 'full';
 
   useEffect(() => {
     if (visible) {
@@ -173,6 +183,7 @@ export function MastersFormPanel({
     if (mode === 'create') {
       createMutation.mutate(values, {
         onSuccess: () => {
+          onSaved?.();
           onClose();
           void showSnackbar(`${config.labelSingular} created`, { variant: 'success' });
         },
@@ -193,6 +204,7 @@ export function MastersFormPanel({
       { id: initialRow.id, values },
       {
         onSuccess: () => {
+          onSaved?.();
           onClose();
           void showSnackbar(`${config.labelSingular} updated`, { variant: 'success' });
         },
@@ -211,18 +223,20 @@ export function MastersFormPanel({
 
   return (
     <Row modifiers={[fillMaxSize()]}>
-      <Column
-        modifiers={[
-          weight(0.12),
-          fillMaxHeight(),
-          background('#00000066'),
-          clickable(onClose),
-        ]}
-      />
+      {isFullWidth ? null : (
+        <Column
+          modifiers={[
+            weight(0.12),
+            fillMaxHeight(),
+            background('#00000066'),
+            clickable(onClose),
+          ]}
+        />
+      )}
 
       <Column
         modifiers={[
-          weight(0.88),
+          weight(isFullWidth ? 1 : 0.88),
           fillMaxHeight(),
           background(colors.surface),
           padding(16, 12, 16, 16),

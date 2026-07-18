@@ -16,12 +16,15 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -66,7 +69,7 @@ data class MastersLazyListProps(
   val modifiers: ModifierList = emptyList()
 ) : ComposeProps
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun FunctionalComposableScope.MastersLazyListContent(
   props: MastersLazyListProps,
@@ -100,14 +103,28 @@ fun FunctionalComposableScope.MastersLazyListContent(
 
     else -> {
       val canInteract = props.interactionEnabled
+      val isRefreshing = props.isRefreshing && canInteract
+      val pullToRefreshState = rememberPullToRefreshState()
+
       PullToRefreshBox(
-        isRefreshing = props.isRefreshing && canInteract,
+        isRefreshing = isRefreshing,
         onRefresh = {
           if (canInteract) {
             onRefresh(RefreshEvent())
           }
         },
-        modifier = baseModifier
+        state = pullToRefreshState,
+        modifier = baseModifier,
+        // Match Expo UI PullToRefreshBox — Material 3 expressive LoadingIndicator.
+        indicator = {
+          PullToRefreshDefaults.LoadingIndicator(
+            isRefreshing = isRefreshing,
+            state = pullToRefreshState,
+            modifier = Modifier.align(Alignment.TopCenter),
+            color = MaterialTheme.colorScheme.primary,
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
+          )
+        }
       ) {
         if (props.items.isEmpty()) {
           Box(

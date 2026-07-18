@@ -1,9 +1,9 @@
-import { Text } from '@expo/ui';
+import type { MastersTab } from '@/components/masters/masters-types';
 
-export function BillFormHeaderFields() {
-  return (
-    <Text>
-      Bill number, date, origin, truck, name board, owner name, and owner mobile fields will go here.
-    </Text>
-  );
+export type BillFormHeaderFieldsProps = {
+  onCreateMaster?: (tab: MastersTab) => void;
+};
+
+export function BillFormHeaderFields(_props: BillFormHeaderFieldsProps) {
+  return null;
 }
