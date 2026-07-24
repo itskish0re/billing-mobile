@@ -3,6 +3,7 @@ export type BillDateFieldProps = {
   date: Date | null;
   error?: string;
   onDateSelected: (date: Date) => void;
+  onClear?: () => void;
 };
 
 export function BillDateField(_props: BillDateFieldProps) {

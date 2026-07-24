@@ -16,6 +16,13 @@ export type MasterFormField = {
   /** Hint shown under the field. */
   supportingText?: string;
   keyboardType?: 'default' | 'phone' | 'number';
+  /**
+   * When set, the form renders a master lookup dropdown.
+   * Field value stores the selected row id as a string.
+   */
+  lookupTab?: MastersTab;
+  /** Key in row.values used as the dropdown display label (edit mode). */
+  lookupLabelKey?: string;
 };
 
 export type MasterListRow = {

@@ -9,6 +9,7 @@ export type MasterLookupDropdownProps = {
   error?: string;
   onSelect: (row: MasterListRow) => void;
   onCreateRequest: (query: string) => void;
+  onClear?: () => void;
 };
 
 export function MasterLookupDropdown(_props: MasterLookupDropdownProps) {

@@ -60,10 +60,10 @@ export const MASTER_ENTITY_CONFIG: Record<MastersTab, MasterEntityConfig> = {
       { key: 'truck_number', label: 'Truck number', required: true },
       {
         key: 'name_board_id',
-        label: 'Name board ID',
+        label: 'Name board',
         required: true,
-        keyboardType: 'number',
-        supportingText: 'Use an existing name board id',
+        lookupTab: 'name-boards',
+        lookupLabelKey: 'name_board_name',
       },
     ],
     mapRow: (row) => ({
@@ -73,6 +73,9 @@ export const MASTER_ENTITY_CONFIG: Record<MastersTab, MasterEntityConfig> = {
       values: {
         truck_number: asString(row.truck_number),
         name_board_id: asString(row.name_board_id),
+        name_board_name: asString(row.name_board_name),
+        owner_name: asString(row.owner_name),
+        owner_phone: asString(row.owner_phone),
       },
     }),
     toPayload: (values) => ({

@@ -1,4 +1,5 @@
 import {
+  Box,
   Button,
   Column,
   Icon,
@@ -21,6 +22,7 @@ import {
 } from '@expo/ui/jetpack-compose/modifiers';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
+import { MasterLookupDropdown } from '@/components/bill-form/master-lookup-dropdown';
 import { MASTER_ENTITY_CONFIG } from '@/components/masters/masters-config';
 import type {
   MasterFormField,
@@ -55,6 +57,22 @@ type FieldState = {
   get: () => string;
   set: (value: string) => void;
 };
+
+type NestedLookupCreate = {
+  tab: MastersTab;
+  fieldKey: string;
+  defaults: Record<string, string>;
+};
+
+function suggestCodeFromName(name: string) {
+  const slug = name
+    .trim()
+    .toUpperCase()
+    .replace(/[^A-Z0-9]+/g, '_')
+    .replace(/^_|_$/g, '')
+    .slice(0, 24);
+  return slug || 'NEW';
+}
 
 function MasterFormFieldInput({
   field,
@@ -116,6 +134,76 @@ function MasterFormFieldInput({
   );
 }
 
+function MasterFormLookupField({
+  field,
+  initialId,
+  initialLabel,
+  error,
+  enabled,
+  onRegister,
+  onCreateRequest,
+}: {
+  field: MasterFormField;
+  initialId: string;
+  initialLabel: string;
+  error?: string;
+  enabled: boolean;
+  onRegister: (key: string, state: FieldState) => void;
+  onCreateRequest: (query: string) => void;
+}) {
+  const [selectedId, setSelectedId] = useState<number | null>(
+    initialId ? Number(initialId) : null
+  );
+  const [selectedLabel, setSelectedLabel] = useState(initialLabel);
+  const idRef = useRef(initialId);
+
+  onRegister(field.key, {
+    get: () => idRef.current,
+    set: (next) => {
+      idRef.current = next;
+      setSelectedId(next ? Number(next) : null);
+    },
+  });
+
+  useEffect(() => {
+    idRef.current = initialId;
+    setSelectedId(initialId ? Number(initialId) : null);
+    setSelectedLabel(initialLabel);
+  }, [initialId, initialLabel]);
+
+  if (!field.lookupTab) {
+    return null;
+  }
+
+  return (
+    <MasterLookupDropdown
+      label={field.label}
+      tab={field.lookupTab}
+      required={field.required}
+      selectedId={selectedId}
+      selectedLabel={selectedLabel}
+      error={error}
+      onSelect={(row) => {
+        if (!enabled) {
+          return;
+        }
+        idRef.current = String(row.id);
+        setSelectedId(row.id);
+        setSelectedLabel(row.title);
+      }}
+      onClear={() => {
+        if (!enabled) {
+          return;
+        }
+        idRef.current = '';
+        setSelectedId(null);
+        setSelectedLabel('');
+      }}
+      onCreateRequest={onCreateRequest}
+    />
+  );
+}
+
 /**
  * Plain mount/unmount (no AnimatedVisibility).
  */
@@ -135,6 +223,10 @@ export function MastersFormPanel({
   const { showSnackbar } = useSnackbar();
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const fieldStates = useRef<Record<string, FieldState>>({});
+  const [nestedLookupCreate, setNestedLookupCreate] = useState<NestedLookupCreate | null>(null);
+  const [lookupOverrides, setLookupOverrides] = useState<
+    Record<string, { id: string; label: string }>
+  >({});
 
   const createDefaultsKey = createDefaults
     ? Object.values(createDefaults).filter(Boolean).join('|')
@@ -145,6 +237,8 @@ export function MastersFormPanel({
   useEffect(() => {
     if (visible) {
       setFieldErrors({});
+      setLookupOverrides({});
+      setNestedLookupCreate(null);
     }
   }, [visible, formIdentity]);
 
@@ -153,6 +247,7 @@ export function MastersFormPanel({
   }, [config.labelSingular, mode]);
 
   const isSaving = createMutation.isPending || updateMutation.isPending;
+  const nestedOpen = nestedLookupCreate != null;
 
   const registerField = (key: string, state: FieldState) => {
     fieldStates.current[key] = state;
@@ -174,7 +269,7 @@ export function MastersFormPanel({
       }
     }
     if (tab === 'trucks' && values.name_board_id && Number.isNaN(Number(values.name_board_id))) {
-      nextErrors.name_board_id = 'Enter a valid name board id';
+      nextErrors.name_board_id = 'Select a valid name board';
     }
     setFieldErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;
@@ -228,68 +323,133 @@ export function MastersFormPanel({
   }
 
   return (
-    <Row modifiers={[fillMaxSize()]}>
-      {isFullWidth ? null : (
+    <Box modifiers={[fillMaxSize()]}>
+      <Row modifiers={[fillMaxSize()]}>
+        {isFullWidth ? null : (
+          <Column
+            modifiers={[
+              weight(0.12),
+              fillMaxHeight(),
+              background('#00000066'),
+              clickable(onClose),
+            ]}
+          />
+        )}
+
         <Column
           modifiers={[
-            weight(0.12),
+            weight(isFullWidth ? 1 : 0.88),
             fillMaxHeight(),
-            background('#00000066'),
-            clickable(onClose),
+            background(colors.surface),
+            padding(16, 12, 16, 16),
           ]}
-        />
-      )}
+          verticalArrangement={{ spacedBy: 0 }}>
+          <Row
+            modifiers={[fillMaxWidth(), padding(0, 4, 0, 12)]}
+            verticalAlignment="center"
+            horizontalArrangement={{ spacedBy: 8 }}>
+            <Text style={{ typography: 'titleLarge' }}>{title}</Text>
+            <Spacer modifiers={[weight(1)]} />
+            <IconButton onClick={onClose} enabled={!isSaving && !nestedOpen}>
+              <Icon source={CLOSE_ICON} size={24} tint={colors.onSurfaceVariant} />
+            </IconButton>
+          </Row>
 
-      <Column
-        modifiers={[
-          weight(isFullWidth ? 1 : 0.88),
-          fillMaxHeight(),
-          background(colors.surface),
-          padding(16, 12, 16, 16),
-        ]}
-        verticalArrangement={{ spacedBy: 0 }}>
-        <Row
-          modifiers={[fillMaxWidth(), padding(0, 4, 0, 12)]}
-          verticalAlignment="center"
-          horizontalArrangement={{ spacedBy: 8 }}>
-          <Text style={{ typography: 'titleLarge' }}>{title}</Text>
-          <Spacer modifiers={[weight(1)]} />
-          <IconButton onClick={onClose} enabled={!isSaving}>
-            <Icon source={CLOSE_ICON} size={24} tint={colors.onSurfaceVariant} />
-          </IconButton>
-        </Row>
-
-        <Column
-          key={formIdentity}
-          modifiers={[fillMaxWidth(), weight(1)]}
-          verticalArrangement={{ spacedBy: 12 }}>
-          {config.formFields.map((field) => (
-            <MasterFormFieldInput
-              key={`${formIdentity}-${field.key}`}
-              field={field}
-              initialValue={
+          <Column
+            key={formIdentity}
+            modifiers={[fillMaxWidth(), weight(1)]}
+            verticalArrangement={{ spacedBy: 12 }}>
+            {config.formFields.map((field) => {
+              const baseValue =
                 mode === 'edit' && initialRow
                   ? (initialRow.values[field.key] ?? '')
-                  : (createDefaults?.[field.key] ?? '')
-              }
-              error={fieldErrors[field.key]}
-              enabled={!isSaving}
-              onRegister={registerField}
-            />
-          ))}
-        </Column>
+                  : (createDefaults?.[field.key] ?? '');
 
-        <Row
-          modifiers={[fillMaxWidth(), padding(0, 16, 0, 0)]}
-          horizontalArrangement={{ spacedBy: 12 }}>
-          <Button modifiers={[weight(1)]} onClick={onClose} enabled={!isSaving}>
-            <Text>Cancel</Text>
-          </Button>
-          <Button modifiers={[weight(1)]} onClick={handleSave} enabled={!isSaving}>
-            <Text>{isSaving ? 'Saving…' : 'Save'}</Text>
-          </Button>
-        </Row>
-      </Column>
-    </Row>
+              if (field.lookupTab) {
+                const labelKey = field.lookupLabelKey ?? '';
+                const override = lookupOverrides[field.key];
+                const initialId = override?.id ?? baseValue;
+                const initialLabel =
+                  override?.label ??
+                  (mode === 'edit' && initialRow && labelKey
+                    ? (initialRow.values[labelKey] ?? '')
+                    : (createDefaults?.[labelKey] ?? ''));
+
+                return (
+                  <MasterFormLookupField
+                    key={`${formIdentity}-${field.key}-${initialId}`}
+                    field={field}
+                    initialId={initialId}
+                    initialLabel={initialLabel}
+                    error={fieldErrors[field.key]}
+                    enabled={!isSaving && !nestedOpen}
+                    onRegister={registerField}
+                    onCreateRequest={(query) => {
+                      setNestedLookupCreate({
+                        tab: field.lookupTab!,
+                        fieldKey: field.key,
+                        defaults: {
+                          name: query,
+                          code: suggestCodeFromName(query),
+                        },
+                      });
+                    }}
+                  />
+                );
+              }
+
+              return (
+                <MasterFormFieldInput
+                  key={`${formIdentity}-${field.key}`}
+                  field={field}
+                  initialValue={baseValue}
+                  error={fieldErrors[field.key]}
+                  enabled={!isSaving && !nestedOpen}
+                  onRegister={registerField}
+                />
+              );
+            })}
+          </Column>
+
+          <Row
+            modifiers={[fillMaxWidth(), padding(0, 16, 0, 0)]}
+            horizontalArrangement={{ spacedBy: 12 }}>
+            <Button modifiers={[weight(1)]} onClick={onClose} enabled={!isSaving && !nestedOpen}>
+              <Text>Cancel</Text>
+            </Button>
+            <Button modifiers={[weight(1)]} onClick={handleSave} enabled={!isSaving && !nestedOpen}>
+              <Text>{isSaving ? 'Saving…' : 'Save'}</Text>
+            </Button>
+          </Row>
+        </Column>
+      </Row>
+
+      {nestedLookupCreate ? (
+        <MastersFormPanel
+          tab={nestedLookupCreate.tab}
+          visible
+          mode="create"
+          presentation="side"
+          createDefaults={nestedLookupCreate.defaults}
+          onClose={() => setNestedLookupCreate(null)}
+          onSaved={(row) => {
+            if (row) {
+              const fieldKey = nestedLookupCreate.fieldKey;
+              fieldStates.current[fieldKey]?.set(String(row.id));
+              setLookupOverrides((prev) => ({
+                ...prev,
+                [fieldKey]: { id: String(row.id), label: row.title },
+              }));
+              setFieldErrors((prev) => {
+                const next = { ...prev };
+                delete next[fieldKey];
+                return next;
+              });
+            }
+            setNestedLookupCreate(null);
+          }}
+        />
+      ) : null}
+    </Box>
   );
 }

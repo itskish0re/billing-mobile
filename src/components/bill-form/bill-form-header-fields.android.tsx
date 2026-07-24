@@ -47,17 +47,14 @@ export function BillFormHeaderFields({
 }: BillFormHeaderFieldsProps) {
   const { data: nextBillNo, isLoading: isBillNoLoading } = useNextBillNumber();
   const billNo = useNativeState('');
-  const [billDate, setBillDate] = useState<Date>(() => new Date());
+  const [billDate, setBillDate] = useState<Date | null>(() => new Date());
 
   const [locationId, setLocationId] = useState<number | null>(null);
   const [locationLabel, setLocationLabel] = useState('');
   const [truckId, setTruckId] = useState<number | null>(null);
   const [truckLabel, setTruckLabel] = useState('');
-  const [nameBoardId, setNameBoardId] = useState<number | null>(null);
-  const [nameBoardLabel, setNameBoardLabel] = useState('');
 
-  const [ownerNameText, setOwnerNameText] = useState('');
-  const [ownerMobileText, setOwnerMobileText] = useState('');
+  const nameBoard = useNativeState('');
   const ownerName = useNativeState('');
   const ownerMobile = useNativeState('');
 
@@ -67,23 +64,20 @@ export function BillFormHeaderFields({
     }
   }, [nextBillNo, billNo]);
 
-  useEffect(() => {
-    void ownerName.set(ownerNameText);
-  }, [ownerNameText, ownerName]);
+  const applyTruckRow = (row: MasterListRow) => {
+    setTruckId(row.id);
+    setTruckLabel(row.title);
+    void nameBoard.set(row.values.name_board_name ?? row.subtitle ?? '');
+    void ownerName.set(row.values.owner_name ?? '');
+    void ownerMobile.set(row.values.owner_phone ?? '');
+  };
 
-  useEffect(() => {
-    void ownerMobile.set(ownerMobileText);
-  }, [ownerMobileText, ownerMobile]);
-
-  const handleNameBoardSelect = (row: MasterListRow) => {
-    setNameBoardId(row.id);
-    setNameBoardLabel(row.title);
-    const nextOwnerName = row.values.owner_name ?? row.meta ?? '';
-    const nextOwnerMobile = row.values.owner_phone ?? '';
-    setOwnerNameText(nextOwnerName);
-    setOwnerMobileText(nextOwnerMobile);
-    void ownerName.set(nextOwnerName);
-    void ownerMobile.set(nextOwnerMobile);
+  const clearTruckDerived = () => {
+    setTruckId(null);
+    setTruckLabel('');
+    void nameBoard.set('');
+    void ownerName.set('');
+    void ownerMobile.set('');
   };
 
   useEffect(() => {
@@ -96,10 +90,7 @@ export function BillFormHeaderFields({
       setLocationId(row.id);
       setLocationLabel(row.title);
     } else if (tab === 'trucks') {
-      setTruckId(row.id);
-      setTruckLabel(row.title);
-    } else if (tab === 'name-boards') {
-      handleNameBoardSelect(row);
+      applyTruckRow(row);
     }
 
     onCreatedMasterApplied?.();
@@ -119,18 +110,19 @@ export function BillFormHeaderFields({
           <Text>Bill No.</Text>
         </OutlinedTextField.Label>
         <OutlinedTextField.SupportingText>
-          <Text>
-            {isBillNoLoading
-              ? 'Loading next bill number…'
-              : 'Auto-generated from the last bill in the active financial year'}
-          </Text>
+          <Text>{isBillNoLoading ? 'Loading…' : 'Auto generated'}</Text>
         </OutlinedTextField.SupportingText>
       </OutlinedTextField>
 
-      <BillDateField label="Date *" date={billDate} onDateSelected={setBillDate} />
+      <BillDateField
+        label="Date *"
+        date={billDate}
+        onDateSelected={setBillDate}
+        onClear={() => setBillDate(null)}
+      />
 
       <MasterLookupDropdown
-        label="Origin / Branch"
+        label="From"
         tab="locations"
         required
         selectedId={locationId}
@@ -138,6 +130,10 @@ export function BillFormHeaderFields({
         onSelect={(row) => {
           setLocationId(row.id);
           setLocationLabel(row.title);
+        }}
+        onClear={() => {
+          setLocationId(null);
+          setLocationLabel('');
         }}
         onCreateRequest={(query) => {
           onCreateMaster?.({
@@ -156,54 +152,31 @@ export function BillFormHeaderFields({
         required
         selectedId={truckId}
         selectedLabel={truckLabel}
-        onSelect={(row) => {
-          setTruckId(row.id);
-          setTruckLabel(row.title);
-        }}
+        onSelect={applyTruckRow}
+        onClear={clearTruckDerived}
         onCreateRequest={(query) => {
           onCreateMaster?.({
             tab: 'trucks',
             defaults: {
               truck_number: query,
-              ...(nameBoardId != null ? { name_board_id: String(nameBoardId) } : {}),
             },
           });
         }}
       />
 
-      <MasterLookupDropdown
-        label="Name Board"
-        tab="name-boards"
-        selectedId={nameBoardId}
-        selectedLabel={nameBoardLabel}
-        onSelect={handleNameBoardSelect}
-        onCreateRequest={(query) => {
-          onCreateMaster?.({
-            tab: 'name-boards',
-            defaults: {
-              name: query,
-              code: suggestCodeFromName(query),
-            },
-          });
-        }}
-      />
+      <OutlinedTextField value={nameBoard} singleLine readOnly modifiers={[fillMaxWidth()]}>
+        <OutlinedTextField.Label>
+          <Text>Name Board</Text>
+        </OutlinedTextField.Label>
+      </OutlinedTextField>
 
-      <OutlinedTextField
-        value={ownerName}
-        singleLine
-        modifiers={[fillMaxWidth()]}
-        onValueChange={setOwnerNameText}>
+      <OutlinedTextField value={ownerName} singleLine readOnly modifiers={[fillMaxWidth()]}>
         <OutlinedTextField.Label>
           <Text>Owner Name</Text>
         </OutlinedTextField.Label>
       </OutlinedTextField>
 
-      <OutlinedTextField
-        value={ownerMobile}
-        singleLine
-        keyboardOptions={{ keyboardType: 'phone' }}
-        modifiers={[fillMaxWidth()]}
-        onValueChange={setOwnerMobileText}>
+      <OutlinedTextField value={ownerMobile} singleLine readOnly modifiers={[fillMaxWidth()]}>
         <OutlinedTextField.Label>
           <Text>Owner Mobile</Text>
         </OutlinedTextField.Label>

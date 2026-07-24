@@ -27,6 +27,34 @@ export async function fetchMasterRows(tab: MastersTab): Promise<MasterListRow[]>
   return ((data ?? []) as Record<string, unknown>[]).map((row) => config.mapRow(row));
 }
 
+async function mapInsertedRow(
+  tab: MastersTab,
+  row: Record<string, unknown>
+): Promise<MasterListRow> {
+  const config = MASTER_ENTITY_CONFIG[tab];
+  const listFrom = config.listFrom;
+  if (!listFrom) {
+    return config.mapRow(row);
+  }
+
+  const id = row[config.idColumn];
+  if (id == null) {
+    return config.mapRow(row);
+  }
+
+  const { data: viewRow, error: viewError } = await db
+    .from(listFrom)
+    .select('*')
+    .eq(config.idColumn, id)
+    .maybeSingle();
+
+  if (viewError || !viewRow) {
+    return config.mapRow(row);
+  }
+
+  return config.mapRow(viewRow as Record<string, unknown>);
+}
+
 export async function createMasterRow(
   tab: MastersTab,
   values: Record<string, string>
@@ -36,7 +64,7 @@ export async function createMasterRow(
   const { data, error } = await db.from(config.table).insert(payload).select('*').single();
 
   if (!error && data) {
-    return config.mapRow(data as Record<string, unknown>);
+    return mapInsertedRow(tab, data as Record<string, unknown>);
   }
 
   // Soft-deleted rows still occupy UNIQUE(code). Revive instead of failing.
@@ -74,7 +102,7 @@ export async function createMasterRow(
         throw reviveError;
       }
 
-      return config.mapRow(revived as Record<string, unknown>);
+      return mapInsertedRow(tab, revived as Record<string, unknown>);
     }
   }
 
