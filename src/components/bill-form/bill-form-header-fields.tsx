@@ -1,7 +1,19 @@
-import type { MastersTab } from '@/components/masters/masters-types';
+import type { MasterListRow, MastersTab } from '@/components/masters/masters-types';
+
+export type BillCreateMasterRequest = {
+  tab: MastersTab;
+  defaults: Record<string, string>;
+};
+
+export type BillCreatedMaster = {
+  tab: MastersTab;
+  row: MasterListRow;
+};
 
 export type BillFormHeaderFieldsProps = {
-  onCreateMaster?: (tab: MastersTab) => void;
+  onCreateMaster?: (request: BillCreateMasterRequest) => void;
+  createdMaster?: BillCreatedMaster | null;
+  onCreatedMasterApplied?: () => void;
 };
 
 export function BillFormHeaderFields(_props: BillFormHeaderFieldsProps) {

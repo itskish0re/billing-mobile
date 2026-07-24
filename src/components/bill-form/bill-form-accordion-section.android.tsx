@@ -1,9 +1,6 @@
 import {
-  AnimatedVisibility,
   Badge,
   Column,
-  EnterTransition,
-  ExitTransition,
   Icon,
   OutlinedCard,
   Row,
@@ -12,12 +9,16 @@ import {
   useMaterialColors,
 } from '@expo/ui/jetpack-compose';
 import {
+  alpha,
   animated,
   background,
   clickable,
+  clip,
   fillMaxWidth,
   graphicsLayer,
+  height,
   padding,
+  Shapes,
   spring,
   weight,
 } from '@expo/ui/jetpack-compose/modifiers';
@@ -30,8 +31,6 @@ const CHEVRON_ICON = require('@/assets/icons/keyboard_arrow_down.xml');
 
 const HEADER_PADDING = 16;
 const BODY_PADDING = 16;
-const ENTER = EnterTransition.expandVertically().plus(EnterTransition.fadeIn());
-const EXIT = ExitTransition.shrinkVertically().plus(ExitTransition.fadeOut());
 
 export type BillFormAccordionSectionProps = {
   value: string;
@@ -42,6 +41,10 @@ export type BillFormAccordionSectionProps = {
   children?: ReactNode;
 };
 
+/**
+ * Body stays mounted (hidden when collapsed) so form field state / SharedObjects
+ * survive collapse. Avoid AnimatedVisibility — it released TextField SharedObjects.
+ */
 export function BillFormAccordionSection({
   value,
   title,
@@ -91,16 +94,16 @@ export function BillFormAccordionSection({
           />
         </Row>
 
-        <AnimatedVisibility visible={isOpen} enterTransition={ENTER} exitTransition={EXIT}>
-          <Column
-            modifiers={[
-              fillMaxWidth(),
-              padding(BODY_PADDING, BODY_PADDING, BODY_PADDING, BODY_PADDING),
-            ]}
-            verticalArrangement={{ spacedBy: 12 }}>
-            {children}
-          </Column>
-        </AnimatedVisibility>
+        <Column
+          modifiers={[
+            fillMaxWidth(),
+            ...(isOpen
+              ? [padding(BODY_PADDING, BODY_PADDING, BODY_PADDING, BODY_PADDING)]
+              : [height(0), alpha(0), clip(Shapes.Rectangle)]),
+          ]}
+          verticalArrangement={{ spacedBy: 12 }}>
+          {children}
+        </Column>
       </Column>
     </OutlinedCard>
   );

@@ -42,11 +42,13 @@ export type MastersFormPanelProps = {
   visible: boolean;
   mode: MastersFormMode;
   initialRow?: MasterListRow | null;
+  /** Prefill create-mode fields (e.g. name from bill lookup query). */
+  createDefaults?: Record<string, string> | null;
   /** Default `side`. Use when stacking over the bill form. */
   presentation?: MastersFormPresentation;
   onClose: () => void;
   /** Called after a successful create/update (before snackbar). */
-  onSaved?: () => void;
+  onSaved?: (row?: MasterListRow) => void;
 };
 
 type FieldState = {
@@ -122,6 +124,7 @@ export function MastersFormPanel({
   visible,
   mode,
   initialRow,
+  createDefaults = null,
   presentation = 'side',
   onClose,
   onSaved,
@@ -133,7 +136,10 @@ export function MastersFormPanel({
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const fieldStates = useRef<Record<string, FieldState>>({});
 
-  const formIdentity = `${tab}-${mode}-${initialRow?.id ?? 'new'}`;
+  const createDefaultsKey = createDefaults
+    ? Object.values(createDefaults).filter(Boolean).join('|')
+    : '';
+  const formIdentity = `${tab}-${mode}-${initialRow?.id ?? 'new'}-${createDefaultsKey}`;
   const isFullWidth = presentation === 'full';
 
   useEffect(() => {
@@ -182,8 +188,8 @@ export function MastersFormPanel({
 
     if (mode === 'create') {
       createMutation.mutate(values, {
-        onSuccess: () => {
-          onSaved?.();
+        onSuccess: (row) => {
+          onSaved?.(row);
           onClose();
           void showSnackbar(`${config.labelSingular} created`, { variant: 'success' });
         },
@@ -262,7 +268,9 @@ export function MastersFormPanel({
               key={`${formIdentity}-${field.key}`}
               field={field}
               initialValue={
-                mode === 'edit' && initialRow ? (initialRow.values[field.key] ?? '') : ''
+                mode === 'edit' && initialRow
+                  ? (initialRow.values[field.key] ?? '')
+                  : (createDefaults?.[field.key] ?? '')
               }
               error={fieldErrors[field.key]}
               enabled={!isSaving}

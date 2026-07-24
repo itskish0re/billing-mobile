@@ -9,9 +9,10 @@ export type MastersFormPanelProps = {
   visible: boolean;
   mode: MastersFormMode;
   initialRow?: MasterListRow | null;
+  createDefaults?: Record<string, string> | null;
   presentation?: MastersFormPresentation;
   onClose: () => void;
-  onSaved?: () => void;
+  onSaved?: (row?: MasterListRow) => void;
 };
 
 export function MastersFormPanel(_props: MastersFormPanelProps) {

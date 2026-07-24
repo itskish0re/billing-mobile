@@ -30,19 +30,19 @@ export async function fetchMasterRows(tab: MastersTab): Promise<MasterListRow[]>
 export async function createMasterRow(
   tab: MastersTab,
   values: Record<string, string>
-): Promise<void> {
+): Promise<MasterListRow> {
   const config = MASTER_ENTITY_CONFIG[tab];
   const payload = config.toPayload(values);
-  const { error } = await db.from(config.table).insert(payload);
+  const { data, error } = await db.from(config.table).insert(payload).select('*').single();
 
-  if (!error) {
-    return;
+  if (!error && data) {
+    return config.mapRow(data as Record<string, unknown>);
   }
 
   // Soft-deleted rows still occupy UNIQUE(code). Revive instead of failing.
   const code = typeof payload.code === 'string' ? payload.code : null;
   const isUniqueViolation =
-    error.code === '23505' || /duplicate key|unique constraint/i.test(error.message ?? '');
+    error?.code === '23505' || /duplicate key|unique constraint/i.test(error?.message ?? '');
 
   if (code && isUniqueViolation) {
     const { data: existing, error: lookupError } = await db
@@ -57,7 +57,7 @@ export async function createMasterRow(
     }
 
     if (existing?.[config.idColumn] != null) {
-      const { error: reviveError } = await db
+      const { data: revived, error: reviveError } = await db
         .from(config.table)
         .update({
           ...payload,
@@ -66,12 +66,15 @@ export async function createMasterRow(
           is_active: true,
           is_enabled: true,
         })
-        .eq(config.idColumn, existing[config.idColumn]);
+        .eq(config.idColumn, existing[config.idColumn])
+        .select('*')
+        .single();
 
       if (reviveError) {
         throw reviveError;
       }
-      return;
+
+      return config.mapRow(revived as Record<string, unknown>);
     }
   }
 

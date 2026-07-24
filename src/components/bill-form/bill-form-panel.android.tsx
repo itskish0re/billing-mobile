@@ -11,10 +11,15 @@ import {
   fillMaxSize,
   fillMaxWidth,
   padding,
+  verticalScroll,
   weight,
 } from '@expo/ui/jetpack-compose/modifiers';
 import { useState } from 'react';
 
+import type {
+  BillCreateMasterRequest,
+  BillCreatedMaster,
+} from '@/components/bill-form/bill-form-header-fields';
 import { BillFormAccordionSection } from '@/components/bill-form/bill-form-accordion-section';
 import { BillFormHeaderFields } from '@/components/bill-form/bill-form-header-fields';
 import { BillFormSectionIcons } from '@/components/bill-form/bill-form-section-icons';
@@ -31,6 +36,11 @@ export type BillFormPanelProps = {
   onClose: () => void;
 };
 
+type MasterCreateState = {
+  tab: MastersTab;
+  defaults: Record<string, string>;
+};
+
 /**
  * Full-width bill create/edit surface (host lives in a full-screen Modal).
  * Cancel / Save sit in the top bar. Master create slides over as a side panel.
@@ -38,17 +48,25 @@ export type BillFormPanelProps = {
 export function BillFormPanel({ visible, onClose }: BillFormPanelProps) {
   const colors = useMaterialColors();
   const { showSnackbar } = useSnackbar();
-  const [masterTab, setMasterTab] = useState<MastersTab | null>(null);
+  const [masterCreate, setMasterCreate] = useState<MasterCreateState | null>(null);
+  const [createdMaster, setCreatedMaster] = useState<BillCreatedMaster | null>(null);
   const masterMode: MastersFormMode = 'create';
 
   if (!visible) {
     return null;
   }
 
-  const masterFormOpen = masterTab != null;
+  const masterFormOpen = masterCreate != null;
 
   const handleSave = () => {
     void showSnackbar('Bill save will be wired next', { variant: 'success' });
+  };
+
+  const openMasterCreate = (request: BillCreateMasterRequest) => {
+    setMasterCreate({
+      tab: request.tab,
+      defaults: request.defaults,
+    });
   };
 
   return (
@@ -72,7 +90,7 @@ export function BillFormPanel({ visible, onClose }: BillFormPanelProps) {
         </Row>
 
         <Column
-          modifiers={[fillMaxWidth(), weight(1)]}
+          modifiers={[fillMaxWidth(), weight(1), verticalScroll()]}
           verticalArrangement={{ spacedBy: 12 }}>
           <Accordion type="multiple" defaultValue={['header']}>
             <BillFormAccordionSection
@@ -80,9 +98,9 @@ export function BillFormPanel({ visible, onClose }: BillFormPanelProps) {
               title="Header Information"
               icon={BillFormSectionIcons.header}>
               <BillFormHeaderFields
-                onCreateMaster={(tab) => {
-                  setMasterTab(tab);
-                }}
+                onCreateMaster={openMasterCreate}
+                createdMaster={createdMaster}
+                onCreatedMasterApplied={() => setCreatedMaster(null)}
               />
             </BillFormAccordionSection>
 
@@ -92,7 +110,7 @@ export function BillFormPanel({ visible, onClose }: BillFormPanelProps) {
               icon={BillFormSectionIcons.loads}
               badge="0 of 3 Max">
               <Text color={colors.onSurfaceVariant} style={{ typography: 'bodyMedium' }}>
-                Load lines will go here. Use “+ Add new …” under lookups when a master is missing.
+                Load lines will go here. Use lookup “Create new …” when a master is missing.
               </Text>
             </BillFormAccordionSection>
 
@@ -109,15 +127,19 @@ export function BillFormPanel({ visible, onClose }: BillFormPanelProps) {
       </Column>
 
       <MastersFormPanel
-        tab={masterTab ?? 'trucks'}
+        tab={masterCreate?.tab ?? 'trucks'}
         visible={masterFormOpen}
         mode={masterMode}
         presentation="side"
+        createDefaults={masterCreate?.defaults ?? null}
         onClose={() => {
-          setMasterTab(null);
+          setMasterCreate(null);
         }}
-        onSaved={() => {
-          setMasterTab(null);
+        onSaved={(row) => {
+          if (row && masterCreate) {
+            setCreatedMaster({ tab: masterCreate.tab, row });
+          }
+          setMasterCreate(null);
         }}
       />
     </Box>
