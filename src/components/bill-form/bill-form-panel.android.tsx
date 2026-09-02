@@ -9,13 +9,16 @@ import {
 } from '@expo/ui/jetpack-compose';
 import {
   background,
+  clickable,
   fillMaxSize,
   fillMaxWidth,
+  imePadding,
   padding,
   verticalScroll,
   weight,
 } from '@expo/ui/jetpack-compose/modifiers';
 import { useCallback, useState } from 'react';
+import { Keyboard } from 'react-native';
 
 import { BillAdvanceSummary } from '@/components/bill-form/bill-advance-summary';
 import { BillChargesSummary } from '@/components/bill-form/bill-charges-summary';
@@ -27,6 +30,7 @@ import type {
 import { BillFormHeaderFields } from '@/components/bill-form/bill-form-header-fields';
 import { BillFormSectionIcons } from '@/components/bill-form/bill-form-section-icons';
 import { BillLoadLines } from '@/components/bill-form/bill-load-lines';
+import { BillPaymentPanel } from '@/components/bill-form/bill-payment-panel';
 import {
   MastersFormPanel,
   type MastersFormMode,
@@ -39,6 +43,8 @@ import {
   recalculateBillForm,
   sumLoadAdvances,
 } from '@/lib/bills/bill-form';
+import { mapBillFormToPreview } from '@/lib/bills/bill-preview';
+import { useBillPreview } from '@/providers/bill-preview-provider';
 import { useSnackbar } from '@/providers/snackbar-provider';
 import type { BillFormValues, BillLoadFormLine } from '@/types/bill-form';
 
@@ -125,6 +131,7 @@ export function BillFormPanel({
 }: BillFormPanelProps) {
   const colors = useMaterialColors();
   const { showSnackbar } = useSnackbar();
+  const { open: openPreview } = useBillPreview();
   const [values, setValues] = useState(createInitialBillFormValues);
   const [masterCreate, setMasterCreate] = useState<MasterCreateState | null>(null);
   const masterMode: MastersFormMode = 'create';
@@ -148,7 +155,8 @@ export function BillFormPanel({
   };
 
   const handlePreview = () => {
-    void showSnackbar('Bill preview will be wired next', { variant: 'success' });
+    Keyboard.dismiss();
+    openPreview(mapBillFormToPreview(values));
   };
 
   const openMasterCreate = (request: BillCreateMasterRequest) => {
@@ -187,11 +195,15 @@ export function BillFormPanel({
             fillMaxWidth(),
             weight(1),
             background(colors.surface),
+            clickable(() => Keyboard.dismiss(), { indication: false }),
+            imePadding(),
             padding(16, 12, 16, 12),
             verticalScroll(),
           ]}
           verticalArrangement={{ spacedBy: 12 }}>
-          <Accordion type="multiple" defaultValue={['header', 'loads', 'charges', 'advance']}>
+          <Accordion
+            type="multiple"
+            defaultValue={['header', 'loads', 'charges', 'payment', 'advance']}>
             <BillFormAccordionSection
               value="header"
               title="Header Information"
@@ -225,6 +237,13 @@ export function BillFormPanel({
                 onTruckLoanChange={(truckLoan) => patchValues({ truckLoan })}
                 onOthersChange={(others) => patchValues({ others })}
               />
+            </BillFormAccordionSection>
+
+            <BillFormAccordionSection
+              value="payment"
+              title="Payment Details"
+              icon={BillFormSectionIcons.payment}>
+              <BillPaymentPanel values={values} onPatch={patchValues} />
             </BillFormAccordionSection>
 
             {showAdvanceSummary ? (

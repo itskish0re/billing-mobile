@@ -20,6 +20,12 @@ export function createEmptyBillOtherItem(): BillOtherItem {
   return { uid: `other-${otherItemSeq}`, key: '', value: '' };
 }
 
+/** Builds a named charge captured from the "Add other charge" dialog. */
+export function createBillOtherItem(key: string, value: number | ''): BillOtherItem {
+  otherItemSeq += 1;
+  return { uid: `other-${otherItemSeq}`, key, value };
+}
+
 export type BillLoadFormLine = {
   loadId?: number | null;
   loadNumber: number;

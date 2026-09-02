@@ -5,17 +5,26 @@ import {
   OutlinedButton,
   OutlinedCard,
   Row,
-  Spacer,
   Text,
   ToggleButton,
   useMaterialColors,
 } from '@expo/ui/jetpack-compose';
-import { fillMaxWidth, padding, weight } from '@expo/ui/jetpack-compose/modifiers';
-
 import {
-  BillFormNumericField,
-  BillFormReadOnlyField,
-} from '@/components/bill-form/bill-form-fields';
+  alpha,
+  animated,
+  clickable,
+  clip,
+  fillMaxWidth,
+  graphicsLayer,
+  height,
+  padding,
+  Shapes,
+  spring,
+  weight,
+} from '@expo/ui/jetpack-compose/modifiers';
+import { useState } from 'react';
+
+import { FormNumericField, FormReadOnlyField } from '@/components/ui/form-fields';
 import type { BillCreateMasterRequest } from '@/components/bill-form/bill-form-header-fields';
 import { MasterLookupDropdown } from '@/components/bill-form/master-lookup-dropdown';
 import type { MasterListRow } from '@/components/masters/masters-types';
@@ -30,6 +39,7 @@ import {
 import type { BillLoadFormLine } from '@/types/bill-form';
 
 const DELETE_ICON = require('@/assets/icons/delete.xml');
+const CHEVRON_ICON = require('@/assets/icons/keyboard_arrow_down.xml');
 
 export type BillLoadLinesProps = {
   loads: BillLoadFormLine[];
@@ -41,8 +51,24 @@ function unitIsFixed(row: MasterListRow) {
   return row.values.is_fixed === 'true';
 }
 
+function loadCardKey(line: BillLoadFormLine): string {
+  return line.loadId != null ? `load-${line.loadId}` : `new-${line.loadNumber}`;
+}
+
+/** Compact one-line route summary shown while a load card is collapsed. */
+function buildLoadSummary(line: BillLoadFormLine): string {
+  const consignor = line.consignorName.trim() || 'Consignor';
+  const destination =
+    line.toLocationName.trim() ||
+    (line.asPerBill ? 'As per bill' : line.consigneeName.trim()) ||
+    'Destination';
+  return `${consignor} → ${destination}`;
+}
+
 export function BillLoadLines({ loads, onChange, onCreateMaster }: BillLoadLinesProps) {
   const colors = useMaterialColors();
+  // Per-card collapse state keyed by card identity; a missing key means expanded.
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
 
   const updateLine = (index: number, patch: Partial<BillLoadFormLine>) => {
     onChange(loads.map((line, i) => (i === index ? { ...line, ...patch } : line)));
@@ -57,6 +83,10 @@ export function BillLoadLines({ loads, onChange, onCreateMaster }: BillLoadLines
     onChange([...loads, createEmptyLoadLine(nextNumber)]);
   };
 
+  const toggleCollapsed = (key: string) => {
+    setCollapsed((previous) => ({ ...previous, [key]: !previous[key] }));
+  };
+
   const removeLine = (index: number) => {
     if (loads.length <= 1) {
       return;
@@ -67,25 +97,56 @@ export function BillLoadLines({ loads, onChange, onCreateMaster }: BillLoadLines
 
   return (
     <Column modifiers={[fillMaxWidth()]} verticalArrangement={{ spacedBy: 12 }}>
-      {loads.map((line, index) => (
+      {loads.map((line, index) => {
+        const key = loadCardKey(line);
+        const isOpen = !collapsed[key];
+
+        return (
         <OutlinedCard
-          key={line.loadId ?? `new-${line.loadNumber}`}
+          key={key}
           modifiers={[fillMaxWidth()]}
           colors={{ containerColor: colors.surfaceContainerLow }}
           border={{ color: colors.outlineVariant, width: 1 }}>
-          <Column
-            modifiers={[fillMaxWidth(), padding(12, 12, 12, 12)]}
-            verticalArrangement={{ spacedBy: 12 }}>
-            <Row verticalAlignment="center" modifiers={[fillMaxWidth()]}>
-              <Text style={{ typography: 'titleSmall' }}>{formatBillLoadLineTitle(index)}</Text>
-              <Spacer modifiers={[weight(1)]} />
+          <Column modifiers={[fillMaxWidth()]}>
+            <Row
+              verticalAlignment="center"
+              horizontalArrangement={{ spacedBy: 8 }}
+              modifiers={[
+                fillMaxWidth(),
+                clickable(() => toggleCollapsed(key)),
+                padding(12, 12, 12, 12),
+              ]}>
+              <Column modifiers={[weight(1)]}>
+                <Text style={{ typography: 'titleSmall' }}>{formatBillLoadLineTitle(index)}</Text>
+                {!isOpen ? (
+                  <Text
+                    color={colors.onSurfaceVariant}
+                    maxLines={1}
+                    style={{ typography: 'bodySmall' }}>
+                    {buildLoadSummary(line)}
+                  </Text>
+                ) : null}
+              </Column>
               {loads.length > 1 ? (
                 <IconButton onClick={() => removeLine(index)}>
                   <Icon source={DELETE_ICON} size={20} tint={colors.error} />
                 </IconButton>
               ) : null}
+              <Icon
+                source={CHEVRON_ICON}
+                tint={colors.onSurfaceVariant}
+                modifiers={[graphicsLayer({ rotationZ: animated(isOpen ? 180 : 0, spring()) })]}
+              />
             </Row>
 
+            <Column
+              modifiers={[
+                fillMaxWidth(),
+                ...(isOpen
+                  ? [padding(12, 0, 12, 12)]
+                  : [height(0), alpha(0), clip(Shapes.Rectangle)]),
+              ]}
+              verticalArrangement={{ spacedBy: 12 }}>
             <MasterLookupDropdown
               label="Consignor"
               tab="parties"
@@ -247,24 +308,24 @@ export function BillLoadLines({ loads, onChange, onCreateMaster }: BillLoadLines
             />
 
             <Row horizontalArrangement={{ spacedBy: 8 }} modifiers={[fillMaxWidth()]}>
-              <BillFormNumericField
+              <FormNumericField
                 key={`${line.loadNumber}-weight`}
                 label="Weight / Qty"
                 required
                 compact
-                onChange={(weightOrQuantity) => updateLine(index, { weightOrQuantity })}
+                onChangeNumber={(weightOrQuantity) => updateLine(index, { weightOrQuantity })}
               />
-              <BillFormNumericField
+              <FormNumericField
                 key={`${line.loadNumber}-rate`}
                 label="Rate"
                 required
                 compact
-                onChange={(ratePerUnit) => updateLine(index, { ratePerUnit })}
+                onChangeNumber={(ratePerUnit) => updateLine(index, { ratePerUnit })}
               />
             </Row>
 
             <Row horizontalArrangement={{ spacedBy: 8 }} modifiers={[fillMaxWidth()]}>
-              <BillFormReadOnlyField
+              <FormReadOnlyField
                 label="Freight"
                 compact
                 value={
@@ -273,22 +334,22 @@ export function BillLoadLines({ loads, onChange, onCreateMaster }: BillLoadLines
                     : formatBillFormCurrency(toFormNumber(line.freight))
                 }
               />
-              <BillFormNumericField
+              <FormNumericField
                 key={`${line.loadNumber}-advance`}
                 label="Advance"
                 compact
-                onChange={(advance) => updateLine(index, { advance })}
+                onChangeNumber={(advance) => updateLine(index, { advance })}
               />
             </Row>
 
             <Row horizontalArrangement={{ spacedBy: 8 }} modifiers={[fillMaxWidth()]}>
-              <BillFormNumericField
+              <FormNumericField
                 key={`${line.loadNumber}-topay`}
                 label="To Pay"
                 compact
-                onChange={(topay) => updateLine(index, { topay })}
+                onChangeNumber={(topay) => updateLine(index, { topay })}
               />
-              <BillFormReadOnlyField
+              <FormReadOnlyField
                 label="Balance"
                 compact
                 highlighted
@@ -299,9 +360,11 @@ export function BillLoadLines({ loads, onChange, onCreateMaster }: BillLoadLines
                 }
               />
             </Row>
+            </Column>
           </Column>
         </OutlinedCard>
-      ))}
+        );
+      })}
 
       <OutlinedButton enabled={loads.length < BILL_FORM_MAX_LOAD_ROWS} onClick={addLine}>
         <Text>Add load line</Text>

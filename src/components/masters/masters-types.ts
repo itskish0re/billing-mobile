@@ -16,6 +16,8 @@ export type MasterFormField = {
   /** Hint shown under the field. */
   supportingText?: string;
   keyboardType?: 'default' | 'phone' | 'number';
+  /** Render the value monospaced with wider letter spacing (IDs, plates, phone numbers). */
+  mono?: boolean;
   /**
    * When set, the form renders a master lookup dropdown.
    * Field value stores the selected row id as a string.

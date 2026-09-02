@@ -3,7 +3,6 @@ import {
   Column,
   DatePickerDialog,
   Icon,
-  IconButton,
   Row,
   Text,
   useMaterialColors,
@@ -12,13 +11,20 @@ import {
   background,
   border,
   clickable,
+  clip,
+  defaultMinSize,
   fillMaxWidth,
   offset,
   padding,
+  Shapes,
   weight,
 } from '@expo/ui/jetpack-compose/modifiers';
 import { useState } from 'react';
 
+import {
+  FORM_FIELD_CORNER_RADIUS,
+  FORM_FIELD_MIN_HEIGHT,
+} from '@/components/ui/form-fields/form-field-metrics';
 import { formatTransactionDate } from '@/lib/transactions/format-transaction-date';
 
 const CALENDAR_ICON = require('@/assets/icons/calendar_month.xml');
@@ -41,9 +47,11 @@ export type OutlinedDateFieldProps = {
 };
 
 /**
- * Outlined date field without useNativeState.
- * Theme / Host remounts release SharedObjects and crash OutlinedTextField.
- * Label is drawn on the top border so it matches Material outlined fields.
+ * Outlined date field without useNativeState. Matches the shared field metrics
+ * (56dp min height, 12dp corners). Trailing actions are plain clickable icons
+ * rather than 48dp `IconButton`s so the control does not grow taller than a
+ * text field. Theme / Host remounts release SharedObjects and crash
+ * `OutlinedTextField`, so the label is drawn on the top border instead.
  */
 export function OutlinedDateField({
   label,
@@ -67,35 +75,36 @@ export function OutlinedDateField({
 
   return (
     <Column
-      modifiers={compact ? [weight(1), fillMaxWidth(), padding(0, 8, 0, 0)] : [fillMaxWidth(), padding(0, 8, 0, 0)]}
+      modifiers={compact ? [weight(1), fillMaxWidth()] : [fillMaxWidth()]}
       verticalArrangement={{ spacedBy: 4 }}>
       <Box modifiers={[fillMaxWidth()]}>
         <Column
           modifiers={[
             fillMaxWidth(),
+            defaultMinSize({ minHeight: FORM_FIELD_MIN_HEIGHT }),
+            clip(Shapes.RoundedCorner(FORM_FIELD_CORNER_RADIUS)),
             border(1, outline),
             clickable(openDialog),
-            padding(16, 14, 12, 12),
-          ]}>
+            padding(16, 8, 12, 8),
+          ]}
+          verticalArrangement="center">
           <Row verticalAlignment="center" modifiers={[fillMaxWidth()]}>
             <Text
               modifiers={[weight(1)]}
+              maxLines={1}
               color={date ? colors.onSurface : colors.onSurfaceVariant}
               style={{ typography: 'bodyLarge' }}>
               {date ? formatTransactionDate(date) : 'Select date'}
             </Text>
             {date && onClear ? (
-              <IconButton
-                onClick={() => {
-                  onClear();
-                  setIsDialogOpen(false);
-                }}>
+              <Box modifiers={[clip(Shapes.Circle), clickable(onClear), padding(4, 4, 4, 4)]}>
                 <Icon source={CLOSE_ICON} size={20} tint={colors.onSurfaceVariant} />
-              </IconButton>
-            ) : null}
-            <IconButton onClick={openDialog}>
-              <Icon source={CALENDAR_ICON} size={20} tint={colors.onSurfaceVariant} />
-            </IconButton>
+              </Box>
+            ) : (
+              <Box modifiers={[clip(Shapes.Circle), clickable(openDialog), padding(4, 4, 4, 4)]}>
+                <Icon source={CALENDAR_ICON} size={20} tint={colors.onSurfaceVariant} />
+              </Box>
+            )}
           </Row>
         </Column>
 

@@ -3,7 +3,7 @@ import { fillMaxWidth } from '@expo/ui/jetpack-compose/modifiers';
 import { useEffect } from 'react';
 
 import { BillDateField } from '@/components/bill-form/bill-date-field';
-import { BillFormReadOnlyField } from '@/components/bill-form/bill-form-fields';
+import { FormReadOnlyField, FormTextField } from '@/components/ui/form-fields';
 import { MasterLookupDropdown } from '@/components/bill-form/master-lookup-dropdown';
 import type { MasterListRow, MastersTab } from '@/components/masters/masters-types';
 import { useNextBillNumber } from '@/hooks/use-next-bill-number';
@@ -48,6 +48,9 @@ export function BillFormHeaderFields({
 }: BillFormHeaderFieldsProps) {
   const { data: nextBillNo, isLoading: isBillNoLoading } = useNextBillNumber();
 
+  // Monospaced, letter-spaced style for phone numbers (matches read-only fields).
+  const monoTextStyle = { fontFamily: 'monospace', letterSpacing: 1 } as const;
+
   useEffect(() => {
     if (nextBillNo && nextBillNo !== values.billNumber) {
       onPatch({ billNumber: nextBillNo });
@@ -56,7 +59,7 @@ export function BillFormHeaderFields({
 
   return (
     <Column verticalArrangement={{ spacedBy: 12 }} modifiers={[fillMaxWidth()]}>
-      <BillFormReadOnlyField
+      <FormReadOnlyField
         label="Bill No."
         value={values.billNumber}
         supportingText={isBillNoLoading ? 'Loading…' : 'Auto generated'}
@@ -122,9 +125,39 @@ export function BillFormHeaderFields({
         }}
       />
 
-      <BillFormReadOnlyField label="Name Board" value={values.nameBoardName} />
-      <BillFormReadOnlyField label="Owner Name" value={values.ownerName} />
-      <BillFormReadOnlyField label="Owner Mobile" value={values.ownerMobile} />
+      <FormReadOnlyField label="Name Board" value={values.nameBoardName} />
+      <FormReadOnlyField label="Owner Name" value={values.ownerName} />
+      <FormReadOnlyField label="Owner Mobile" value={values.ownerMobile} monospace />
+
+      <FormTextField
+        label="Driver Name"
+        required
+        capitalization="words"
+        imeAction="next"
+        initialText={values.driverName}
+        onChangeText={(driverName) => onPatch({ driverName })}
+      />
+
+      <FormTextField
+        label="Driver Mobile 1"
+        required
+        keyboardType="phone"
+        maxLength={10}
+        imeAction="next"
+        textStyle={monoTextStyle}
+        initialText={values.driverMobile1}
+        onChangeText={(driverMobile1) => onPatch({ driverMobile1 })}
+      />
+
+      <FormTextField
+        label="Driver Mobile 2"
+        keyboardType="phone"
+        maxLength={10}
+        imeAction="done"
+        textStyle={monoTextStyle}
+        initialText={values.driverMobile2}
+        onChangeText={(driverMobile2) => onPatch({ driverMobile2 })}
+      />
     </Column>
   );
 }

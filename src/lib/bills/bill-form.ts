@@ -1,5 +1,4 @@
 import {
-  createEmptyBillOtherItem,
   sumBillOtherItems,
   type BillFormValues,
   type BillLoadFormLine,
@@ -98,7 +97,7 @@ export function createInitialBillFormValues(): BillFormValues {
     officeMamul: '',
     tapalMamul: '',
     diesel: '',
-    others: [createEmptyBillOtherItem()],
+    others: [],
     total: '',
     isCancelled: false,
     loads: [createEmptyLoadLine()],

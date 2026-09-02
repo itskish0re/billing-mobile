@@ -29,7 +29,7 @@ export const MASTER_ENTITY_CONFIG: Record<MastersTab, MasterEntityConfig> = {
       { key: 'code', label: 'Code', required: true },
       { key: 'name', label: 'Name', required: true },
       { key: 'owner_name', label: 'Owner name', required: true },
-      { key: 'owner_phone', label: 'Owner phone', keyboardType: 'phone' },
+      { key: 'owner_phone', label: 'Owner phone', keyboardType: 'phone', mono: true },
     ],
     mapRow: (row) => ({
       id: Number(row.name_board_id),
@@ -57,7 +57,7 @@ export const MASTER_ENTITY_CONFIG: Record<MastersTab, MasterEntityConfig> = {
     labelSingular: 'Truck',
     labelPlural: 'Trucks',
     formFields: [
-      { key: 'truck_number', label: 'Truck number', required: true },
+      { key: 'truck_number', label: 'Truck number', required: true, mono: true },
       {
         key: 'name_board_id',
         label: 'Name board',

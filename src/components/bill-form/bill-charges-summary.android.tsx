@@ -10,23 +10,25 @@ import {
   useMaterialColors,
 } from '@expo/ui/jetpack-compose';
 import { fillMaxWidth, padding, weight } from '@expo/ui/jetpack-compose/modifiers';
+import { useState } from 'react';
 
-import {
-  BillFormNumericField,
-  BillFormTextField,
-} from '@/components/bill-form/bill-form-fields';
+import { OtherChargeDialog } from '@/components/bill-form/other-charge-dialog';
+import { FormNumericField } from '@/components/ui/form-fields';
 import {
   formatBillFormCurrency,
   isTruckLoanAllowed,
   toFormNumber,
 } from '@/lib/bills/bill-form';
-import { createEmptyBillOtherItem, type BillFormValues, type BillOtherItem } from '@/types/bill-form';
+import { createBillOtherItem, type BillFormValues, type BillOtherItem } from '@/types/bill-form';
 
 const DELETE_ICON = require('@/assets/icons/delete.xml');
 
 export type BillChargesSummaryProps = {
   values: BillFormValues;
-  onNumericChange: (key: 'crossing' | 'officeMamul' | 'tapalMamul' | 'diesel' | 'handLoan', value: number | '') => void;
+  onNumericChange: (
+    key: 'crossing' | 'officeMamul' | 'tapalMamul' | 'diesel' | 'handLoan',
+    value: number | ''
+  ) => void;
   onTruckLoanChange: (checked: boolean) => void;
   onOthersChange: (items: BillOtherItem[]) => void;
 };
@@ -41,7 +43,7 @@ function ChargeReadOnlyRow({ label, amount }: { label: string; amount: number | 
         {label}
       </Text>
       <Text color={colors.onSurface} style={{ typography: 'bodyMedium' }}>
-        {n == null ? '—' : formatBillFormCurrency(n)}
+        {n == null ? '' : formatBillFormCurrency(n)}
       </Text>
     </Row>
   );
@@ -56,22 +58,19 @@ export function BillChargesSummary({
   const colors = useMaterialColors();
   const truckLoanEnabled = isTruckLoanAllowed(values.loads);
   const others = values.others;
+  const [dialogOpen, setDialogOpen] = useState(false);
 
-  const updateOther = (index: number, patch: Partial<BillOtherItem>) => {
-    onOthersChange(others.map((item, i) => (i === index ? { ...item, ...patch } : item)));
+  const updateOtherAmount = (uid: string, value: number | '') => {
+    onOthersChange(others.map((item) => (item.uid === uid ? { ...item, value } : item)));
   };
 
-  const addOther = () => {
-    onOthersChange([...others, createEmptyBillOtherItem()]);
+  const removeOther = (uid: string) => {
+    onOthersChange(others.filter((item) => item.uid !== uid));
   };
 
-  const removeOther = (index: number) => {
-    if (others.length <= 1) {
-      onOthersChange([createEmptyBillOtherItem()]);
-      return;
-    }
-
-    onOthersChange(others.filter((_, i) => i !== index));
+  const addOther = (name: string, amount: number | '') => {
+    onOthersChange([...others, createBillOtherItem(name, amount)]);
+    setDialogOpen(false);
   };
 
   return (
@@ -79,57 +78,47 @@ export function BillChargesSummary({
       <ChargeReadOnlyRow label="Total freight" amount={values.totalFreight} />
       <ChargeReadOnlyRow label="Commission (2%)" amount={values.commission} />
 
-      <BillFormNumericField
+      <FormNumericField
         key="crossing"
         label="Crossing"
-        onChange={(value) => onNumericChange('crossing', value)}
+        onChangeNumber={(value) => onNumericChange('crossing', value)}
       />
-      <BillFormNumericField
+      <FormNumericField
         key="officeMamul"
         label="Office mamul"
-        onChange={(value) => onNumericChange('officeMamul', value)}
+        onChangeNumber={(value) => onNumericChange('officeMamul', value)}
       />
-      <BillFormNumericField
+      <FormNumericField
         key="tapalMamul"
         label="Tapal mamul"
-        onChange={(value) => onNumericChange('tapalMamul', value)}
+        onChangeNumber={(value) => onNumericChange('tapalMamul', value)}
       />
-      <BillFormNumericField
+      <FormNumericField
         key="diesel"
         label="Diesel"
-        onChange={(value) => onNumericChange('diesel', value)}
+        onChangeNumber={(value) => onNumericChange('diesel', value)}
       />
-      <BillFormNumericField
+      <FormNumericField
         key="handLoan"
         label="Hand loan"
-        onChange={(value) => onNumericChange('handLoan', value)}
+        onChangeNumber={(value) => onNumericChange('handLoan', value)}
       />
 
-      {others.map((item, index) => (
-        <Column
-          key={item.uid}
-          modifiers={[fillMaxWidth()]}
-          verticalArrangement={{ spacedBy: 8 }}>
-          <Row verticalAlignment="center" modifiers={[fillMaxWidth()]}>
-            <BillFormTextField
-              label="Other charge"
-              compact
-              onChange={(key) => updateOther(index, { key })}
-            />
-            {others.length > 1 || item.key.trim() ? (
-              <IconButton onClick={() => removeOther(index)}>
-                <Icon source={DELETE_ICON} size={20} tint={colors.error} />
-              </IconButton>
-            ) : null}
-          </Row>
-          <BillFormNumericField
-            label="Amount"
-            onChange={(value) => updateOther(index, { value })}
+      {others.map((item) => (
+        <Row key={item.uid} verticalAlignment="center" modifiers={[fillMaxWidth()]}>
+          <FormNumericField
+            label={item.key}
+            compact
+            initialValue={item.value}
+            onChangeNumber={(value) => updateOtherAmount(item.uid, value)}
           />
-        </Column>
+          <IconButton onClick={() => removeOther(item.uid)}>
+            <Icon source={DELETE_ICON} size={20} tint={colors.error} />
+          </IconButton>
+        </Row>
       ))}
 
-      <OutlinedButton onClick={addOther}>
+      <OutlinedButton onClick={() => setDialogOpen(true)}>
         <Text>Add other charge</Text>
       </OutlinedButton>
 
@@ -160,6 +149,10 @@ export function BillChargesSummary({
           {formatBillFormCurrency(toFormNumber(values.total) ?? 0)}
         </Text>
       </Row>
+
+      {dialogOpen ? (
+        <OtherChargeDialog onAdd={addOther} onDismiss={() => setDialogOpen(false)} />
+      ) : null}
     </Column>
   );
 }

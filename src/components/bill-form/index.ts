@@ -6,16 +6,6 @@ export { BillChargesSummary } from '@/components/bill-form/bill-charges-summary'
 export type { BillChargesSummaryProps } from '@/components/bill-form/bill-charges-summary';
 export { BillDateField } from '@/components/bill-form/bill-date-field';
 export type { BillDateFieldProps } from '@/components/bill-form/bill-date-field';
-export {
-  BillFormNumericField,
-  BillFormReadOnlyField,
-  BillFormTextField,
-} from '@/components/bill-form/bill-form-fields';
-export type {
-  BillFormNumericFieldProps,
-  BillFormReadOnlyFieldProps,
-  BillFormTextFieldProps,
-} from '@/components/bill-form/bill-form-fields';
 export { BillFormHeaderFields } from '@/components/bill-form/bill-form-header-fields';
 export type {
   BillCreateMasterRequest,

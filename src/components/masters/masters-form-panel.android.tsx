@@ -105,12 +105,24 @@ function MasterFormFieldInput({
     void value.set(initialValue);
   }, [initialValue, value]);
 
+  const keyboardType =
+    field.keyboardType === 'phone'
+      ? 'phone'
+      : field.keyboardType === 'number'
+        ? 'number'
+        : 'text';
+
   return (
     <OutlinedTextField
       value={value}
       singleLine
       enabled={enabled}
       isError={Boolean(error)}
+      keyboardOptions={{
+        keyboardType,
+        capitalization: field.mono ? 'characters' : 'none',
+      }}
+      textStyle={field.mono ? { fontFamily: 'monospace', letterSpacing: 1 } : undefined}
       modifiers={[fillMaxWidth()]}
       onValueChange={(text) => {
         mirrorRef.current = text;
