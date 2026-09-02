@@ -1,10 +1,6 @@
 import { Text } from '@expo/ui';
 
-import {
-  BillFormAccordionSection,
-  BillFormHeaderFields,
-  BillFormSectionIcons,
-} from '@/components/bill-form';
+import { BillFormAccordionSection, BillFormSectionIcons } from '@/components/bill-form';
 import { Accordion } from '@/components/ui/accordion';
 
 /** Non-Android fallback — bill form placeholder. */
@@ -15,22 +11,22 @@ export function HomeScreen() {
         value="header"
         title="Header Information"
         icon={BillFormSectionIcons.header}>
-        <BillFormHeaderFields />
+        <Text>Bill header fields (Android only).</Text>
       </BillFormAccordionSection>
 
       <BillFormAccordionSection
         value="loads"
         title="Load Details"
         icon={BillFormSectionIcons.loads}
-        badge="2 of 3 Max">
-        <Text>Nested load line accordions will go here (up to 3 loads).</Text>
+        badge="0 of 3 Max">
+        <Text>Load lines (Android only).</Text>
       </BillFormAccordionSection>
 
       <BillFormAccordionSection
         value="charges"
         title="Charges Summary"
-        icon={BillFormSectionIcons.header}>
-        <Text>Freight total, commission, crossing, mamul, diesel, and bill total.</Text>
+        icon={BillFormSectionIcons.charges}>
+        <Text>Freight, commission, and totals (Android only).</Text>
       </BillFormAccordionSection>
     </Accordion>
   );

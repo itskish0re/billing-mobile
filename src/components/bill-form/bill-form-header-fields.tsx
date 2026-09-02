@@ -1,19 +1,25 @@
-import type { MasterListRow, MastersTab } from '@/components/masters/masters-types';
+import type { MastersTab } from '@/components/masters/masters-types';
+import type { BillFormValues } from '@/types/bill-form';
+
+export type BillCreateMasterTarget =
+  | { kind: 'from' }
+  | { kind: 'truck' }
+  | {
+      kind: 'load';
+      index: number;
+      field: 'consignor' | 'consignee' | 'destination' | 'goods' | 'unit';
+    };
 
 export type BillCreateMasterRequest = {
   tab: MastersTab;
   defaults: Record<string, string>;
-};
-
-export type BillCreatedMaster = {
-  tab: MastersTab;
-  row: MasterListRow;
+  target: BillCreateMasterTarget;
 };
 
 export type BillFormHeaderFieldsProps = {
-  onCreateMaster?: (request: BillCreateMasterRequest) => void;
-  createdMaster?: BillCreatedMaster | null;
-  onCreatedMasterApplied?: () => void;
+  values: BillFormValues;
+  onPatch: (patch: Partial<BillFormValues>) => void;
+  onCreateMaster: (request: BillCreateMasterRequest) => void;
 };
 
 export function BillFormHeaderFields(_props: BillFormHeaderFieldsProps) {

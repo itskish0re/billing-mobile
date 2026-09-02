@@ -9,16 +9,20 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useRef,
   useState,
   type ReactNode,
 } from 'react';
+import { StatusBar } from 'expo-status-bar';
+import * as SystemUI from 'expo-system-ui';
 import { Modal, StyleSheet, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BillFormPanel } from '@/components/bill-form/bill-form-panel';
-import { BRAND_SEED_COLOR } from '@/constants/brand';
+import { BRAND_SEED_COLOR, TabChrome, resolveColorScheme } from '@/constants/brand';
+import { useColorScheme } from '@/hooks/use-color-scheme';
 
 type BillFormContextValue = {
   isOpen: boolean;
@@ -50,8 +54,11 @@ export function useBillForm() {
 export function BillFormProvider({ children }: { children: ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
-  const insets = useSafeAreaInsets();
   const exitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const insets = useSafeAreaInsets();
+  const colorScheme = useColorScheme();
+  const scheme = resolveColorScheme(colorScheme);
+  const chrome = TabChrome[scheme];
 
   const clearExitTimer = useCallback(() => {
     if (exitTimerRef.current != null) {
@@ -81,6 +88,14 @@ export function BillFormProvider({ children }: { children: ReactNode }) {
     }, EXIT_MS);
   }, [clearExitTimer, isOpen]);
 
+  useEffect(() => {
+    if (!modalVisible) {
+      return;
+    }
+
+    SystemUI.setBackgroundColorAsync(chrome.statusBar).catch(() => undefined);
+  }, [chrome.statusBar, modalVisible]);
+
   const value = useMemo(
     () => ({
       isOpen,
@@ -98,22 +113,27 @@ export function BillFormProvider({ children }: { children: ReactNode }) {
         animationType="none"
         transparent
         statusBarTranslucent
+        navigationBarTranslucent
         onRequestClose={close}>
-        <View
-          style={[
-            styles.modalRoot,
-            { paddingTop: insets.top, paddingBottom: insets.bottom },
-          ]}>
-          <Host style={styles.host} seedColor={BRAND_SEED_COLOR}>
-            <AnimatedVisibility
-              visible={isOpen}
-              enterTransition={ENTER}
-              exitTransition={EXIT}
-              modifiers={[fillMaxSize()]}>
-              <BillFormPanel visible onClose={close} />
-            </AnimatedVisibility>
-          </Host>
-        </View>
+        <SafeAreaProvider>
+          <View style={[styles.modalRoot, { backgroundColor: chrome.statusBar }]}>
+            <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
+            <Host style={styles.host} seedColor={BRAND_SEED_COLOR} colorScheme={scheme}>
+              <AnimatedVisibility
+                visible={isOpen}
+                enterTransition={ENTER}
+                exitTransition={EXIT}
+                modifiers={[fillMaxSize()]}>
+                <BillFormPanel
+                  visible
+                  onClose={close}
+                  topInset={insets.top}
+                  bottomInset={insets.bottom}
+                />
+              </AnimatedVisibility>
+            </Host>
+          </View>
+        </SafeAreaProvider>
       </Modal>
     </BillFormContext.Provider>
   );

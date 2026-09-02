@@ -10,6 +10,7 @@ import { StyleSheet, View } from 'react-native';
 
 import { TabHeader } from '@/components/tab-header';
 import { BRAND_SEED_COLOR } from '@/constants/brand';
+import { useColorScheme } from '@/hooks/use-color-scheme';
 
 export type ScreenShellProps = {
   children?: ReactNode;
@@ -47,9 +48,16 @@ export function ScreenShell({
   horizontalPadding,
   topPadding,
 }: ScreenShellProps) {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'unspecified' ? 'light' : colorScheme;
+
   return (
     <View style={styles.root}>
-      <Host style={styles.host} seedColor={BRAND_SEED_COLOR}>
+      <Host
+        key={scheme}
+        style={styles.host}
+        seedColor={BRAND_SEED_COLOR}
+        colorScheme={scheme}>
         <ScreenShellContent horizontalPadding={horizontalPadding} topPadding={topPadding}>
           {children}
         </ScreenShellContent>

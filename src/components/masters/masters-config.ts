@@ -168,6 +168,7 @@ export const MASTER_ENTITY_CONFIG: Record<MastersTab, MasterEntityConfig> = {
       values: {
         code: asString(row.code),
         name: asString(row.name),
+        is_fixed: row.is_fixed === true ? 'true' : 'false',
       },
     }),
     toPayload: (values) => ({

@@ -12,7 +12,8 @@ import { ScrollableTabRowView } from '../../../../modules/scrollable-tab-row';
 type AppTabRowProps<T extends string> = {
   tabs: AppTabItem<T>[];
   selectedIndex: number;
-  pagePosition: PagerTabPosition;
+  /** Optional swipe sync. Omit to avoid useNativeState Host remount crashes on theme change. */
+  pagePosition?: PagerTabPosition;
   onTabSelected: (index: number, tab: AppTabItem<T>) => void;
 };
 

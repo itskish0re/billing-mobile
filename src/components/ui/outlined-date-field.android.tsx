@@ -1,16 +1,23 @@
 import {
+  Box,
   Column,
   DatePickerDialog,
   Icon,
   IconButton,
-  OutlinedTextField,
   Row,
   Text,
   useMaterialColors,
-  useNativeState,
 } from '@expo/ui/jetpack-compose';
-import { fillMaxWidth, weight } from '@expo/ui/jetpack-compose/modifiers';
-import { useEffect, useState } from 'react';
+import {
+  background,
+  border,
+  clickable,
+  fillMaxWidth,
+  offset,
+  padding,
+  weight,
+} from '@expo/ui/jetpack-compose/modifiers';
+import { useState } from 'react';
 
 import { formatTransactionDate } from '@/lib/transactions/format-transaction-date';
 
@@ -34,11 +41,9 @@ export type OutlinedDateFieldProps = {
 };
 
 /**
- * Material outlined date field — OutlinedTextField so the label sits in the
- * top border cutout when a value is present (same as other form fields).
- *
- * Must stay mounted while its Host is alive (do not put under AnimatedVisibility
- * that removes children).
+ * Outlined date field without useNativeState.
+ * Theme / Host remounts release SharedObjects and crash OutlinedTextField.
+ * Label is drawn on the top border so it matches Material outlined fields.
  */
 export function OutlinedDateField({
   label,
@@ -53,11 +58,8 @@ export function OutlinedDateField({
 }: OutlinedDateFieldProps) {
   const colors = useMaterialColors();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const display = useNativeState(date ? formatTransactionDate(date) : '');
-
-  useEffect(() => {
-    void display.set(date ? formatTransactionDate(date) : '');
-  }, [date, display]);
+  const outline = error ? colors.error : colors.outline;
+  const labelColor = error ? colors.error : colors.onSurfaceVariant;
 
   const openDialog = () => {
     setIsDialogOpen(true);
@@ -65,29 +67,23 @@ export function OutlinedDateField({
 
   return (
     <Column
-      modifiers={compact ? [weight(1), fillMaxWidth()] : [fillMaxWidth()]}
-      verticalArrangement={{ spacedBy: 0 }}>
-      <OutlinedTextField
-        value={display}
-        singleLine
-        readOnly
-        isError={Boolean(error)}
-        modifiers={[fillMaxWidth()]}
-        onFocusChanged={(focused) => {
-          if (focused) {
-            openDialog();
-          }
-        }}>
-        <OutlinedTextField.Label>
-          <Text>{label}</Text>
-        </OutlinedTextField.Label>
-        {!date ? (
-          <OutlinedTextField.Placeholder>
-            <Text>Select date</Text>
-          </OutlinedTextField.Placeholder>
-        ) : null}
-        <OutlinedTextField.TrailingIcon>
-          <Row verticalAlignment="center">
+      modifiers={compact ? [weight(1), fillMaxWidth(), padding(0, 8, 0, 0)] : [fillMaxWidth(), padding(0, 8, 0, 0)]}
+      verticalArrangement={{ spacedBy: 4 }}>
+      <Box modifiers={[fillMaxWidth()]}>
+        <Column
+          modifiers={[
+            fillMaxWidth(),
+            border(1, outline),
+            clickable(openDialog),
+            padding(16, 14, 12, 12),
+          ]}>
+          <Row verticalAlignment="center" modifiers={[fillMaxWidth()]}>
+            <Text
+              modifiers={[weight(1)]}
+              color={date ? colors.onSurface : colors.onSurfaceVariant}
+              style={{ typography: 'bodyLarge' }}>
+              {date ? formatTransactionDate(date) : 'Select date'}
+            </Text>
             {date && onClear ? (
               <IconButton
                 onClick={() => {
@@ -101,13 +97,21 @@ export function OutlinedDateField({
               <Icon source={CALENDAR_ICON} size={20} tint={colors.onSurfaceVariant} />
             </IconButton>
           </Row>
-        </OutlinedTextField.TrailingIcon>
-        {error ? (
-          <OutlinedTextField.SupportingText>
-            <Text color={colors.error}>{error}</Text>
-          </OutlinedTextField.SupportingText>
-        ) : null}
-      </OutlinedTextField>
+        </Column>
+
+        <Text
+          color={labelColor}
+          style={{ typography: 'bodySmall' }}
+          modifiers={[offset(12, -8), background(colors.surface), padding(4, 0, 4, 0)]}>
+          {label}
+        </Text>
+      </Box>
+
+      {error ? (
+        <Text color={colors.error} style={{ typography: 'bodySmall' }}>
+          {error}
+        </Text>
+      ) : null}
 
       {isDialogOpen ? (
         <DatePickerDialog

@@ -20,7 +20,6 @@ import { useRef } from 'react';
 import { TransactionsDateFilterField } from '@/components/transactions/transactions-date-filter-field';
 import { TransactionsFilterAccordion } from '@/components/transactions/transactions-filter-accordion';
 import { AppTabRow, type AppTabItem } from '@/components/ui/tab-row';
-import { usePagerTabPosition } from '@/hooks/use-pager-tab-position';
 import { useTransactionsFilters, type TransactionsTab } from '@/hooks/use-transactions-filters';
 import { useBillForm } from '@/providers/bill-form-provider';
 
@@ -64,11 +63,8 @@ export function TransactionsScreen() {
   } = useTransactionsFilters();
 
   const selectedIndex = activeTab === 'bills' ? 0 : 1;
-  const { pagePosition, handlePageScroll, handleSettledPage, selectPage } =
-    usePagerTabPosition(selectedIndex);
 
   const selectTab = (index: number, tab: AppTabItem<TransactionsTab>) => {
-    selectPage(index);
     setActiveTab(tab.id);
     void pagerRef.current?.animateScrollToPage(index);
   };
@@ -81,7 +77,6 @@ export function TransactionsScreen() {
         <AppTabRow
           tabs={TRANSACTION_TABS}
           selectedIndex={selectedIndex}
-          pagePosition={pagePosition}
           onTabSelected={selectTab}
         />
 
@@ -107,13 +102,11 @@ export function TransactionsScreen() {
           initialPage={selectedIndex}
           userScrollEnabled={false}
           modifiers={[fillMaxWidth(), weight(1)]}
-          onPageScroll={handlePageScroll}
           onCurrentPageChange={(page) => {
             setActiveTab(page === 0 ? 'bills' : 'loads');
           }}
           onSettledPageChange={(page) => {
             setActiveTab(page === 0 ? 'bills' : 'loads');
-            handleSettledPage(page);
           }}>
           <TransactionListPlaceholder
             title={searchQuery ? `No bills match "${searchQuery}"` : 'Bills will appear here'}

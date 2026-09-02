@@ -25,7 +25,6 @@ import {
 } from '@/components/masters/masters-form-panel';
 import type { MasterListRow, MastersTab } from '@/components/masters/masters-types';
 import { AppTabRow } from '@/components/ui/tab-row';
-import { usePagerTabPosition } from '@/hooks/use-pager-tab-position';
 
 const SEARCH_ICON = require('@/assets/icons/search.xml');
 const ADD_ICON = require('@/assets/icons/add.xml');
@@ -39,21 +38,18 @@ export function MastersScreen() {
   const [formVisible, setFormVisible] = useState(false);
   const [formMode, setFormMode] = useState<MastersFormMode>('create');
   const [editingRow, setEditingRow] = useState<MasterListRow | null>(null);
-  const { pagePosition, selectPage } = usePagerTabPosition(0);
 
   const activeTab = MASTERS_TABS[selectedIndex];
   const searchPlaceholder = `Search ${activeTab.label.toLowerCase()}`;
 
   useEffect(() => {
-    selectPage(selectedIndex);
-  }, [selectedIndex]);
-
-  const selectTab = (index: number) => {
-    selectPage(index);
-    setSelectedIndex(index);
     setSearchQuery('');
     setFormVisible(false);
     setEditingRow(null);
+  }, [selectedIndex]);
+
+  const selectTab = (index: number) => {
+    setSelectedIndex(index);
   };
 
   const openCreate = () => {
@@ -79,7 +75,6 @@ export function MastersScreen() {
         <AppTabRow
           tabs={MASTERS_TABS}
           selectedIndex={selectedIndex}
-          pagePosition={pagePosition}
           onTabSelected={selectTab}
         />
 

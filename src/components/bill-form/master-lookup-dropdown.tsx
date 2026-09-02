@@ -6,6 +6,8 @@ export type MasterLookupDropdownProps = {
   selectedId: number | null;
   selectedLabel: string;
   required?: boolean;
+  enabled?: boolean;
+  allowCreate?: boolean;
   error?: string;
   onSelect: (row: MasterListRow) => void;
   onCreateRequest: (query: string) => void;

@@ -1,147 +1,94 @@
-import {
-  Column,
-  OutlinedTextField,
-  Text,
-  useNativeState,
-} from '@expo/ui/jetpack-compose';
+import { Column } from '@expo/ui/jetpack-compose';
 import { fillMaxWidth } from '@expo/ui/jetpack-compose/modifiers';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 
 import { BillDateField } from '@/components/bill-form/bill-date-field';
+import { BillFormReadOnlyField } from '@/components/bill-form/bill-form-fields';
 import { MasterLookupDropdown } from '@/components/bill-form/master-lookup-dropdown';
 import type { MasterListRow, MastersTab } from '@/components/masters/masters-types';
 import { useNextBillNumber } from '@/hooks/use-next-bill-number';
+import { parseIsoDate, suggestCodeFromName, toIsoDate } from '@/lib/bills/bill-form';
+import type { BillFormValues } from '@/types/bill-form';
+
+export type BillCreateMasterTarget =
+  | { kind: 'from' }
+  | { kind: 'truck' }
+  | {
+      kind: 'load';
+      index: number;
+      field: 'consignor' | 'consignee' | 'destination' | 'goods' | 'unit';
+    };
 
 export type BillCreateMasterRequest = {
   tab: MastersTab;
-  /** Prefill values for the master create form. */
   defaults: Record<string, string>;
-};
-
-export type BillCreatedMaster = {
-  tab: MastersTab;
-  row: MasterListRow;
+  target: BillCreateMasterTarget;
 };
 
 export type BillFormHeaderFieldsProps = {
-  onCreateMaster?: (request: BillCreateMasterRequest) => void;
-  /** Applied when a master is created from a lookup “Create new” action. */
-  createdMaster?: BillCreatedMaster | null;
-  onCreatedMasterApplied?: () => void;
+  values: BillFormValues;
+  onPatch: (patch: Partial<BillFormValues>) => void;
+  onCreateMaster: (request: BillCreateMasterRequest) => void;
 };
 
-function suggestCodeFromName(name: string) {
-  const slug = name
-    .trim()
-    .toUpperCase()
-    .replace(/[^A-Z0-9]+/g, '_')
-    .replace(/^_|_$/g, '')
-    .slice(0, 24);
-  return slug || 'NEW';
+function truckDerivedFromRow(row: MasterListRow): Partial<BillFormValues> {
+  return {
+    truckId: row.id,
+    truckNumber: row.title,
+    nameBoardName: row.values.name_board_name ?? row.subtitle ?? '',
+    ownerName: row.values.owner_name ?? '',
+    ownerMobile: row.values.owner_phone ?? '',
+  };
 }
 
 export function BillFormHeaderFields({
+  values,
+  onPatch,
   onCreateMaster,
-  createdMaster,
-  onCreatedMasterApplied,
 }: BillFormHeaderFieldsProps) {
   const { data: nextBillNo, isLoading: isBillNoLoading } = useNextBillNumber();
-  const billNo = useNativeState('');
-  const [billDate, setBillDate] = useState<Date | null>(() => new Date());
-
-  const [locationId, setLocationId] = useState<number | null>(null);
-  const [locationLabel, setLocationLabel] = useState('');
-  const [truckId, setTruckId] = useState<number | null>(null);
-  const [truckLabel, setTruckLabel] = useState('');
-
-  const nameBoard = useNativeState('');
-  const ownerName = useNativeState('');
-  const ownerMobile = useNativeState('');
 
   useEffect(() => {
-    if (nextBillNo) {
-      void billNo.set(nextBillNo);
+    if (nextBillNo && nextBillNo !== values.billNumber) {
+      onPatch({ billNumber: nextBillNo });
     }
-  }, [nextBillNo, billNo]);
-
-  const applyTruckRow = (row: MasterListRow) => {
-    setTruckId(row.id);
-    setTruckLabel(row.title);
-    void nameBoard.set(row.values.name_board_name ?? row.subtitle ?? '');
-    void ownerName.set(row.values.owner_name ?? '');
-    void ownerMobile.set(row.values.owner_phone ?? '');
-  };
-
-  const clearTruckDerived = () => {
-    setTruckId(null);
-    setTruckLabel('');
-    void nameBoard.set('');
-    void ownerName.set('');
-    void ownerMobile.set('');
-  };
-
-  useEffect(() => {
-    if (!createdMaster) {
-      return;
-    }
-
-    const { tab, row } = createdMaster;
-    if (tab === 'locations') {
-      setLocationId(row.id);
-      setLocationLabel(row.title);
-    } else if (tab === 'trucks') {
-      applyTruckRow(row);
-    }
-
-    onCreatedMasterApplied?.();
-    // Intentionally only react to createdMaster updates.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [createdMaster]);
+  }, [nextBillNo, onPatch, values.billNumber]);
 
   return (
     <Column verticalArrangement={{ spacedBy: 12 }} modifiers={[fillMaxWidth()]}>
-      <OutlinedTextField
-        value={billNo}
-        singleLine
-        readOnly
-        enabled={!isBillNoLoading}
-        modifiers={[fillMaxWidth()]}>
-        <OutlinedTextField.Label>
-          <Text>Bill No.</Text>
-        </OutlinedTextField.Label>
-        <OutlinedTextField.SupportingText>
-          <Text>{isBillNoLoading ? 'Loading…' : 'Auto generated'}</Text>
-        </OutlinedTextField.SupportingText>
-      </OutlinedTextField>
+      <BillFormReadOnlyField
+        label="Bill No."
+        value={values.billNumber}
+        supportingText={isBillNoLoading ? 'Loading…' : 'Auto generated'}
+      />
 
       <BillDateField
         label="Date *"
-        date={billDate}
-        onDateSelected={setBillDate}
-        onClear={() => setBillDate(null)}
+        date={parseIsoDate(values.billDate)}
+        onDateSelected={(date) => onPatch({ billDate: toIsoDate(date) })}
+        onClear={() => onPatch({ billDate: '' })}
       />
 
       <MasterLookupDropdown
         label="From"
         tab="locations"
         required
-        selectedId={locationId}
-        selectedLabel={locationLabel}
+        selectedId={values.fromId}
+        selectedLabel={values.fromLocationName}
         onSelect={(row) => {
-          setLocationId(row.id);
-          setLocationLabel(row.title);
+          onPatch({ fromId: row.id, fromLocationName: row.title });
         }}
         onClear={() => {
-          setLocationId(null);
-          setLocationLabel('');
+          onPatch({ fromId: null, fromLocationName: '' });
         }}
         onCreateRequest={(query) => {
-          onCreateMaster?.({
+          onCreateMaster({
             tab: 'locations',
             defaults: {
               name: query,
               code: suggestCodeFromName(query),
             },
+            target: { kind: 'from' },
           });
         }}
       />
@@ -150,37 +97,34 @@ export function BillFormHeaderFields({
         label="Truck No."
         tab="trucks"
         required
-        selectedId={truckId}
-        selectedLabel={truckLabel}
-        onSelect={applyTruckRow}
-        onClear={clearTruckDerived}
+        selectedId={values.truckId}
+        selectedLabel={values.truckNumber}
+        onSelect={(row) => {
+          onPatch(truckDerivedFromRow(row));
+        }}
+        onClear={() => {
+          onPatch({
+            truckId: null,
+            truckNumber: '',
+            nameBoardName: '',
+            ownerName: '',
+            ownerMobile: '',
+          });
+        }}
         onCreateRequest={(query) => {
-          onCreateMaster?.({
+          onCreateMaster({
             tab: 'trucks',
             defaults: {
               truck_number: query,
             },
+            target: { kind: 'truck' },
           });
         }}
       />
 
-      <OutlinedTextField value={nameBoard} singleLine readOnly modifiers={[fillMaxWidth()]}>
-        <OutlinedTextField.Label>
-          <Text>Name Board</Text>
-        </OutlinedTextField.Label>
-      </OutlinedTextField>
-
-      <OutlinedTextField value={ownerName} singleLine readOnly modifiers={[fillMaxWidth()]}>
-        <OutlinedTextField.Label>
-          <Text>Owner Name</Text>
-        </OutlinedTextField.Label>
-      </OutlinedTextField>
-
-      <OutlinedTextField value={ownerMobile} singleLine readOnly modifiers={[fillMaxWidth()]}>
-        <OutlinedTextField.Label>
-          <Text>Owner Mobile</Text>
-        </OutlinedTextField.Label>
-      </OutlinedTextField>
+      <BillFormReadOnlyField label="Name Board" value={values.nameBoardName} />
+      <BillFormReadOnlyField label="Owner Name" value={values.ownerName} />
+      <BillFormReadOnlyField label="Owner Mobile" value={values.ownerMobile} />
     </Column>
   );
 }

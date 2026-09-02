@@ -16,6 +16,8 @@ export type MasterLookupDropdownProps = {
   selectedId: number | null;
   selectedLabel: string;
   required?: boolean;
+  enabled?: boolean;
+  allowCreate?: boolean;
   error?: string;
   onSelect: (row: MasterListRow) => void;
   onCreateRequest: (query: string) => void;
@@ -31,6 +33,8 @@ export function MasterLookupDropdown({
   tab,
   selectedLabel,
   required,
+  enabled = true,
+  allowCreate = true,
   error,
   onSelect,
   onCreateRequest,
@@ -57,9 +61,10 @@ export function MasterLookupDropdown({
         label={fieldLabel}
         value={selectedLabel}
         items={items}
+        enabled={enabled}
         isLoading={isLoading}
         isError={Boolean(error)}
-        allowCreate
+        allowCreate={allowCreate}
         modifiers={[fillMaxWidth()]}
         onItemPressed={(event: FilterableDropdownItemPressedEvent) => {
           const row = data.find((item) => item.id === event.id);
