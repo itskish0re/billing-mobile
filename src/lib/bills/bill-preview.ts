@@ -1,5 +1,6 @@
 import { BILL_FORM_MAX_LOAD_ROWS, toFormNumber } from '@/lib/bills/bill-form';
 import type { BillFormValues } from '@/types/bill-form';
+import type { BillListRow } from '@/types/bill-list';
 import type {
   BillPreviewAdvanceSummary,
   BillPreviewLoadLine,
@@ -230,5 +231,57 @@ export function mapBillFormToPreview(values: BillFormValues): BillPreviewModel {
     total: toFormNumber(values.total),
     totalFreight: toFormNumber(values.totalFreight),
     isCancelled: values.isCancelled,
+  };
+}
+
+/** Maps a persisted bill list row (view + loads) to the preview model. */
+export function mapBillListRowToPreview(row: BillListRow): BillPreviewModel {
+  const loads: BillPreviewLoadLine[] = row.loads.map((line, index) => ({
+    loadNumber: line.loadNumber || index + 1,
+    consignorName: line.consignorName,
+    consigneeName: line.consigneeName,
+    asPerBill: line.asPerBill,
+    toLocationName: line.toLocationName,
+    goodsName: line.goodsName,
+    unitName: line.unitName,
+    weightOrQuantity: line.weightOrQuantity,
+    ratePerUnit: line.ratePerUnit,
+    freight: line.freight,
+    advance: line.advance,
+    topay: line.topay,
+    balance: line.balance,
+  }));
+
+  const payBy = normalizePayBy(row.payBy);
+
+  return {
+    company: DEFAULT_BILL_PREVIEW_COMPANY,
+    billNumber: row.billNumber,
+    billDate: row.billDate,
+    fromLocationName: row.fromLocationName,
+    toLocationName: loads[0]?.toLocationName ?? '',
+    truckNumber: row.truckNumber,
+    nameBoardName: row.nameBoardName,
+    ownerName: row.ownerName,
+    ownerMobile: row.ownerMobile,
+    driverName: row.driverName,
+    driverMobile1: row.driverMobile1,
+    driverMobile2: row.driverMobile2,
+    loads: loads.slice(0, BILL_FORM_MAX_LOAD_ROWS),
+    truckLoan: row.truckLoan,
+    payBy,
+    paidName: payBy === 'upi' ? (row.paidName ?? '').trim() || null : null,
+    paidMobile: payBy === 'upi' ? (row.paidMobile ?? '').trim() || null : null,
+    advanceSummary: buildBillAdvanceSummary(loads, row.total),
+    commission: row.commission,
+    officeMamul: row.officeMamul,
+    tapalMamul: row.tapalMamul,
+    crossing: row.crossing,
+    handLoan: row.handLoan,
+    diesel: row.diesel,
+    others: row.others.map((o) => ({ key: o.key.trim(), value: o.value })),
+    total: row.total,
+    totalFreight: row.totalFreight,
+    isCancelled: row.isCancelled,
   };
 }

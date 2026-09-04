@@ -23,10 +23,13 @@ import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-cont
 import { BillFormPanel } from '@/components/bill-form/bill-form-panel';
 import { BRAND_SEED_COLOR, TabChrome, resolveColorScheme } from '@/constants/brand';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import type { BillFormValues } from '@/types/bill-form';
 
 type BillFormContextValue = {
   isOpen: boolean;
   openCreate: () => void;
+  /** Opens the form prefilled with an existing bill's values (edit mode). */
+  openEdit: (values: BillFormValues) => void;
   close: () => void;
 };
 
@@ -54,6 +57,7 @@ export function useBillForm() {
 export function BillFormProvider({ children }: { children: ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
+  const [editValues, setEditValues] = useState<BillFormValues | null>(null);
   const exitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const insets = useSafeAreaInsets();
   const colorScheme = useColorScheme();
@@ -69,12 +73,25 @@ export function BillFormProvider({ children }: { children: ReactNode }) {
 
   const openCreate = useCallback(() => {
     clearExitTimer();
+    setEditValues(null);
     setModalVisible(true);
     // Mount Host first, then flip visible so enter transition actually runs.
     requestAnimationFrame(() => {
       setIsOpen(true);
     });
   }, [clearExitTimer]);
+
+  const openEdit = useCallback(
+    (values: BillFormValues) => {
+      clearExitTimer();
+      setEditValues(values);
+      setModalVisible(true);
+      requestAnimationFrame(() => {
+        setIsOpen(true);
+      });
+    },
+    [clearExitTimer]
+  );
 
   const close = useCallback(() => {
     if (!isOpen) {
@@ -100,9 +117,10 @@ export function BillFormProvider({ children }: { children: ReactNode }) {
     () => ({
       isOpen,
       openCreate,
+      openEdit,
       close,
     }),
-    [isOpen, openCreate, close]
+    [isOpen, openCreate, openEdit, close]
   );
 
   return (
@@ -127,6 +145,8 @@ export function BillFormProvider({ children }: { children: ReactNode }) {
                 <BillFormPanel
                   visible
                   onClose={close}
+                  mode={editValues ? 'edit' : 'create'}
+                  initialValues={editValues}
                   topInset={insets.top}
                   bottomInset={insets.bottom}
                 />

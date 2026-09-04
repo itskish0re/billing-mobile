@@ -17,11 +17,16 @@ import {
 } from '@expo/ui/jetpack-compose/modifiers';
 import { useRef } from 'react';
 
+import { BillsList } from '@/components/transactions/bills-list';
 import { TransactionsDateFilterField } from '@/components/transactions/transactions-date-filter-field';
 import { TransactionsFilterAccordion } from '@/components/transactions/transactions-filter-accordion';
 import { AppTabRow, type AppTabItem } from '@/components/ui/tab-row';
 import { useTransactionsFilters, type TransactionsTab } from '@/hooks/use-transactions-filters';
+import { mapBillListRowToForm } from '@/lib/bills/map-bill-to-form';
+import { mapBillListRowToPreview } from '@/lib/bills/bill-preview';
 import { useBillForm } from '@/providers/bill-form-provider';
+import { useBillPreview } from '@/providers/bill-preview-provider';
+import type { BillListRow } from '@/types/bill-list';
 
 const ADD_ICON = require('@/assets/icons/add.xml');
 
@@ -47,7 +52,8 @@ function TransactionListPlaceholder({ title }: { title: string }) {
 
 export function TransactionsScreen() {
   const pagerRef = useRef<HorizontalPagerHandle>(null);
-  const { openCreate, isOpen: billFormOpen } = useBillForm();
+  const { openCreate, openEdit, isOpen: billFormOpen } = useBillForm();
+  const { open: openPreview } = useBillPreview();
   const {
     startDate,
     endDate,
@@ -58,11 +64,20 @@ export function TransactionsScreen() {
     clearStartDate,
     clearEndDate,
     fieldErrors,
+    isDateRangeValid,
     setSearchQuery,
     setActiveTab,
   } = useTransactionsFilters();
 
   const selectedIndex = activeTab === 'bills' ? 0 : 1;
+
+  const handleEditBill = (row: BillListRow) => {
+    openEdit(mapBillListRowToForm(row));
+  };
+
+  const handlePreviewBill = (row: BillListRow) => {
+    openPreview(mapBillListRowToPreview(row));
+  };
 
   const selectTab = (index: number, tab: AppTabItem<TransactionsTab>) => {
     setActiveTab(tab.id);
@@ -108,8 +123,13 @@ export function TransactionsScreen() {
           onSettledPageChange={(page) => {
             setActiveTab(page === 0 ? 'bills' : 'loads');
           }}>
-          <TransactionListPlaceholder
-            title={searchQuery ? `No bills match "${searchQuery}"` : 'Bills will appear here'}
+          <BillsList
+            searchQuery={searchQuery}
+            startDate={startDate}
+            endDate={endDate}
+            isDateRangeValid={isDateRangeValid}
+            onEdit={handleEditBill}
+            onPreview={handlePreviewBill}
           />
           <TransactionListPlaceholder
             title={searchQuery ? `No loads match "${searchQuery}"` : 'Loads will appear here'}

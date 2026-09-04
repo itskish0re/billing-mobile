@@ -37,6 +37,7 @@ import {
 } from '@/components/masters/masters-form-panel';
 import type { MasterListRow, MastersTab } from '@/components/masters/masters-types';
 import { Accordion } from '@/components/ui/accordion';
+import { useBillMutations } from '@/hooks/use-bill-mutations';
 import {
   BILL_FORM_MAX_LOAD_ROWS,
   createInitialBillFormValues,
@@ -44,6 +45,7 @@ import {
   sumLoadAdvances,
 } from '@/lib/bills/bill-form';
 import { mapBillFormToPreview } from '@/lib/bills/bill-preview';
+import { validateBillForm } from '@/lib/validation/bill-form-schema';
 import { useBillPreview } from '@/providers/bill-preview-provider';
 import { useSnackbar } from '@/providers/snackbar-provider';
 import type { BillFormValues, BillLoadFormLine } from '@/types/bill-form';
@@ -51,6 +53,10 @@ import type { BillFormValues, BillLoadFormLine } from '@/types/bill-form';
 export type BillFormPanelProps = {
   visible: boolean;
   onClose: () => void;
+  /** 'edit' prefills from `initialValues` and skips bill-number auto-assign. */
+  mode?: 'create' | 'edit';
+  /** Existing bill values to edit; omit for a fresh bill. */
+  initialValues?: BillFormValues | null;
   /** Status-bar inset from the root SafeAreaProvider (Modal insets are often 0). */
   topInset?: number;
   /** Navigation-bar inset from the root SafeAreaProvider. */
@@ -126,13 +132,18 @@ function applyCreatedMasterToValues(
 export function BillFormPanel({
   visible,
   onClose,
+  mode = 'create',
+  initialValues = null,
   topInset = 0,
   bottomInset = 0,
 }: BillFormPanelProps) {
   const colors = useMaterialColors();
   const { showSnackbar } = useSnackbar();
   const { open: openPreview } = useBillPreview();
-  const [values, setValues] = useState(createInitialBillFormValues);
+  const { saveMutation } = useBillMutations();
+  const [values, setValues] = useState(() => initialValues ?? createInitialBillFormValues());
+  const isEdit = mode === 'edit';
+  const isSaving = saveMutation.isPending;
   const [masterCreate, setMasterCreate] = useState<MasterCreateState | null>(null);
   const masterMode: MastersFormMode = 'create';
   const headerColor = colors.secondaryContainer;
@@ -151,7 +162,28 @@ export function BillFormPanel({
   const loadCount = values.loads.length;
 
   const handleSave = () => {
-    void showSnackbar('Bill save will be wired next', { variant: 'success' });
+    Keyboard.dismiss();
+    const computed = recalculateBillForm(values);
+    const validation = validateBillForm(computed);
+    if (!validation.success) {
+      void showSnackbar(validation.message, { variant: 'error' });
+      return;
+    }
+
+    saveMutation.mutate(
+      { values: computed, loads: validation.loads },
+      {
+        onSuccess: () => {
+          onClose();
+          void showSnackbar(isEdit ? 'Bill updated' : 'Bill created', { variant: 'success' });
+        },
+        onError: (err) => {
+          void showSnackbar(err instanceof Error ? err.message : 'Could not save the bill.', {
+            variant: 'error',
+          });
+        },
+      }
+    );
   };
 
   const handlePreview = () => {
@@ -179,10 +211,10 @@ export function BillFormPanel({
             verticalAlignment="center">
             <Column modifiers={[weight(1)]} />
             <Text color={headerContentColor} style={{ typography: 'titleLarge' }}>
-              New bill
+              {isEdit ? 'Edit bill' : 'New bill'}
             </Text>
             <Column modifiers={[weight(1)]} horizontalAlignment="end">
-              <Button enabled={!masterFormOpen} onClick={handlePreview}>
+              <Button enabled={!masterFormOpen && !isSaving} onClick={handlePreview}>
                 <Text>Preview</Text>
               </Button>
             </Column>
@@ -212,6 +244,7 @@ export function BillFormPanel({
                 values={values}
                 onPatch={patchValues}
                 onCreateMaster={openMasterCreate}
+                autoAssignBillNumber={!isEdit}
               />
             </BillFormAccordionSection>
 
@@ -267,12 +300,12 @@ export function BillFormPanel({
             modifiers={[fillMaxWidth(), padding(16, 12, 16, 12)]}
             verticalAlignment="center"
             horizontalArrangement={{ spacedBy: 8 }}>
-            <Button onClick={onClose} enabled={!masterFormOpen}>
+            <Button onClick={onClose} enabled={!masterFormOpen && !isSaving}>
               <Text>Cancel</Text>
             </Button>
             <Column modifiers={[weight(1)]} />
-            <Button enabled={!masterFormOpen} onClick={handleSave}>
-              <Text>Save</Text>
+            <Button enabled={!masterFormOpen && !isSaving} onClick={handleSave}>
+              <Text>{isSaving ? 'Saving…' : 'Save'}</Text>
             </Button>
           </Row>
         </Column>

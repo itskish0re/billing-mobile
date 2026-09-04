@@ -1,8 +1,11 @@
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
 
+import type { BillFormValues } from '@/types/bill-form';
+
 type BillFormContextValue = {
   isOpen: boolean;
   openCreate: () => void;
+  openEdit: (values: BillFormValues) => void;
   close: () => void;
 };
 
@@ -23,6 +26,10 @@ export function BillFormProvider({ children }: { children: ReactNode }) {
     setIsOpen(true);
   }, []);
 
+  const openEdit = useCallback((_values: BillFormValues) => {
+    setIsOpen(true);
+  }, []);
+
   const close = useCallback(() => {
     setIsOpen(false);
   }, []);
@@ -31,9 +38,10 @@ export function BillFormProvider({ children }: { children: ReactNode }) {
     () => ({
       isOpen,
       openCreate,
+      openEdit,
       close,
     }),
-    [isOpen, openCreate, close]
+    [isOpen, openCreate, openEdit, close]
   );
 
   return <BillFormContext.Provider value={value}>{children}</BillFormContext.Provider>;

@@ -20,6 +20,7 @@ export type BillFormHeaderFieldsProps = {
   values: BillFormValues;
   onPatch: (patch: Partial<BillFormValues>) => void;
   onCreateMaster: (request: BillCreateMasterRequest) => void;
+  autoAssignBillNumber?: boolean;
 };
 
 export function BillFormHeaderFields(_props: BillFormHeaderFieldsProps) {

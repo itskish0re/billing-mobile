@@ -48,7 +48,9 @@ export function FilterAccordion({
         modifiers={[fillMaxWidth(), clickable(() => setIsOpen((open) => !open)), padding(16, 12, 16, 12)]}
         horizontalArrangement="spaceBetween"
         verticalAlignment="center">
-        <Text style={{ typography: 'titleSmall' }}>Filter</Text>
+        <Text color={colors.onSurface} style={{ typography: 'titleSmall' }}>
+          Filter
+        </Text>
         <Icon
           source={CHEVRON_ICON}
           size={24}

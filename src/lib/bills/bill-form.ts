@@ -47,6 +47,27 @@ export function suggestCodeFromName(name: string) {
   return slug || 'NEW';
 }
 
+/** True when the user has started filling a load line (empty extras are skipped on save). */
+export function isLoadLineStarted(line: BillLoadFormLine): boolean {
+  return (
+    line.consignorId != null ||
+    line.consigneeId != null ||
+    line.asPerBill ||
+    line.toId != null ||
+    line.goodsId != null ||
+    line.unitId != null ||
+    line.weightOrQuantity !== '' ||
+    line.ratePerUnit !== '' ||
+    line.advance !== '' ||
+    line.topay !== ''
+  );
+}
+
+/** First load is always saved; later empty rows are ignored. */
+export function collectSavableLoadLines(loads: BillLoadFormLine[]): BillLoadFormLine[] {
+  return loads.filter((line, index) => index === 0 || isLoadLineStarted(line));
+}
+
 export function createEmptyLoadLine(loadNumber = 1): BillLoadFormLine {
   return {
     loadNumber,

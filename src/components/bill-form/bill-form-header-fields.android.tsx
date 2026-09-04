@@ -29,6 +29,8 @@ export type BillFormHeaderFieldsProps = {
   values: BillFormValues;
   onPatch: (patch: Partial<BillFormValues>) => void;
   onCreateMaster: (request: BillCreateMasterRequest) => void;
+  /** Auto-assign the next bill number on create; disable in edit mode. */
+  autoAssignBillNumber?: boolean;
 };
 
 function truckDerivedFromRow(row: MasterListRow): Partial<BillFormValues> {
@@ -45,6 +47,7 @@ export function BillFormHeaderFields({
   values,
   onPatch,
   onCreateMaster,
+  autoAssignBillNumber = true,
 }: BillFormHeaderFieldsProps) {
   const { data: nextBillNo, isLoading: isBillNoLoading } = useNextBillNumber();
 
@@ -52,10 +55,10 @@ export function BillFormHeaderFields({
   const monoTextStyle = { fontFamily: 'monospace', letterSpacing: 1 } as const;
 
   useEffect(() => {
-    if (nextBillNo && nextBillNo !== values.billNumber) {
+    if (autoAssignBillNumber && nextBillNo && nextBillNo !== values.billNumber) {
       onPatch({ billNumber: nextBillNo });
     }
-  }, [nextBillNo, onPatch, values.billNumber]);
+  }, [autoAssignBillNumber, nextBillNo, onPatch, values.billNumber]);
 
   return (
     <Column verticalArrangement={{ spacedBy: 12 }} modifiers={[fillMaxWidth()]}>
