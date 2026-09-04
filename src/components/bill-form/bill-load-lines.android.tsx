@@ -313,6 +313,7 @@ export function BillLoadLines({ loads, onChange, onCreateMaster }: BillLoadLines
                 label="Weight / Qty"
                 required
                 compact
+                initialValue={line.weightOrQuantity}
                 onChangeNumber={(weightOrQuantity) => updateLine(index, { weightOrQuantity })}
               />
               <FormNumericField
@@ -320,6 +321,7 @@ export function BillLoadLines({ loads, onChange, onCreateMaster }: BillLoadLines
                 label="Rate"
                 required
                 compact
+                initialValue={line.ratePerUnit}
                 onChangeNumber={(ratePerUnit) => updateLine(index, { ratePerUnit })}
               />
             </Row>
@@ -338,6 +340,7 @@ export function BillLoadLines({ loads, onChange, onCreateMaster }: BillLoadLines
                 key={`${line.loadNumber}-advance`}
                 label="Advance"
                 compact
+                initialValue={line.advance}
                 onChangeNumber={(advance) => updateLine(index, { advance })}
               />
             </Row>
@@ -347,6 +350,7 @@ export function BillLoadLines({ loads, onChange, onCreateMaster }: BillLoadLines
                 key={`${line.loadNumber}-topay`}
                 label="To Pay"
                 compact
+                initialValue={line.topay}
                 onChangeNumber={(topay) => updateLine(index, { topay })}
               />
               <FormReadOnlyField

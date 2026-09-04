@@ -81,26 +81,31 @@ export function BillChargesSummary({
       <FormNumericField
         key="crossing"
         label="Crossing"
+        initialValue={values.crossing}
         onChangeNumber={(value) => onNumericChange('crossing', value)}
       />
       <FormNumericField
         key="officeMamul"
         label="Office mamul"
+        initialValue={values.officeMamul}
         onChangeNumber={(value) => onNumericChange('officeMamul', value)}
       />
       <FormNumericField
         key="tapalMamul"
         label="Tapal mamul"
+        initialValue={values.tapalMamul}
         onChangeNumber={(value) => onNumericChange('tapalMamul', value)}
       />
       <FormNumericField
         key="diesel"
         label="Diesel"
+        initialValue={values.diesel}
         onChangeNumber={(value) => onNumericChange('diesel', value)}
       />
       <FormNumericField
         key="handLoan"
         label="Hand loan"
+        initialValue={values.handLoan}
         onChangeNumber={(value) => onNumericChange('handLoan', value)}
       />
 

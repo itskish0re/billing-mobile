@@ -10,7 +10,7 @@ import {
 } from '@expo/ui/jetpack-compose';
 import { fillMaxWidth } from '@expo/ui/jetpack-compose/modifiers';
 import { useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 import { useAuth } from '@/providers/auth-provider';
 import { useSnackbar } from '@/providers/snackbar-provider';
@@ -22,37 +22,9 @@ export function UpdateNameScreen() {
   const colors = useMaterialColors();
   const { profile, updateProfileName } = useAuth();
   const { showSnackbar } = useSnackbar();
-  const name = useNativeState(profile?.full_name ?? '');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-
-  useEffect(() => {
-    void name.set(profile?.full_name ?? '');
-  }, [name, profile?.full_name]);
-
-  const handleSave = async () => {
-    const trimmedName = name.value.trim();
-
-    if (!trimmedName) {
-      setErrorMessage('Name cannot be empty.');
-      return;
-    }
-
-    setErrorMessage(null);
-    setIsSaving(true);
-
-    const message = await updateProfileName(trimmedName);
-
-    if (message) {
-      setErrorMessage(message);
-      setIsSaving(false);
-      return;
-    }
-
-    await showSnackbar('Name updated successfully', { variant: 'success' });
-    setIsSaving(false);
-    router.back();
-  };
+  const seededName = profile?.full_name ?? '';
 
   return (
     <Column modifiers={[fillMaxWidth()]} verticalArrangement={{ spacedBy: 20 }}>
@@ -72,6 +44,51 @@ export function UpdateNameScreen() {
         </Text>
       </Column>
 
+      <UpdateNameField
+        key={seededName}
+        initialName={seededName}
+        errorMessage={errorMessage}
+        isSaving={isSaving}
+        onSave={async (trimmedName) => {
+          setErrorMessage(null);
+          setIsSaving(true);
+
+          const message = await updateProfileName(trimmedName);
+
+          if (message) {
+            setErrorMessage(message);
+            setIsSaving(false);
+            return;
+          }
+
+          await showSnackbar('Name updated successfully', { variant: 'success' });
+          setIsSaving(false);
+          router.back();
+        }}
+        onEmpty={() => setErrorMessage('Name cannot be empty.')}
+      />
+    </Column>
+  );
+}
+
+function UpdateNameField({
+  initialName,
+  errorMessage,
+  isSaving,
+  onSave,
+  onEmpty,
+}: {
+  initialName: string;
+  errorMessage: string | null;
+  isSaving: boolean;
+  onSave: (name: string) => Promise<void>;
+  onEmpty: () => void;
+}) {
+  const colors = useMaterialColors();
+  const name = useNativeState(initialName);
+
+  return (
+    <>
       <OutlinedTextField
         value={name}
         singleLine
@@ -86,9 +103,18 @@ export function UpdateNameScreen() {
         </OutlinedTextField.SupportingText>
       </OutlinedTextField>
 
-      <Button enabled={!isSaving} onClick={() => void handleSave()}>
+      <Button
+        enabled={!isSaving}
+        onClick={() => {
+          const trimmedName = name.value.trim();
+          if (!trimmedName) {
+            onEmpty();
+            return;
+          }
+          void onSave(trimmedName);
+        }}>
         <Text color={colors.onPrimary}>Save</Text>
       </Button>
-    </Column>
+    </>
   );
 }

@@ -8,6 +8,7 @@ import { MasterLookupDropdown } from '@/components/bill-form/master-lookup-dropd
 import type { MasterListRow, MastersTab } from '@/components/masters/masters-types';
 import { useNextBillNumber } from '@/hooks/use-next-bill-number';
 import { parseIsoDate, suggestCodeFromName, toIsoDate } from '@/lib/bills/bill-form';
+import { formatTruckNumber } from '@/lib/bills/format-truck-number';
 import type { BillFormValues } from '@/types/bill-form';
 
 export type BillCreateMasterTarget =
@@ -36,7 +37,7 @@ export type BillFormHeaderFieldsProps = {
 function truckDerivedFromRow(row: MasterListRow): Partial<BillFormValues> {
   return {
     truckId: row.id,
-    truckNumber: row.title,
+    truckNumber: row.values.truck_number || row.title,
     nameBoardName: row.values.name_board_name ?? row.subtitle ?? '',
     ownerName: row.values.owner_name ?? '',
     ownerMobile: row.values.owner_phone ?? '',
@@ -104,7 +105,7 @@ export function BillFormHeaderFields({
         tab="trucks"
         required
         selectedId={values.truckId}
-        selectedLabel={values.truckNumber}
+        selectedLabel={formatTruckNumber(values.truckNumber)}
         onSelect={(row) => {
           onPatch(truckDerivedFromRow(row));
         }}

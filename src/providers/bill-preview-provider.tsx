@@ -20,6 +20,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BillPreviewCanvas } from '@/components/bill-preview/bill-preview-canvas';
+import { SnackbarHost } from '@/providers/snackbar-provider';
 import type { BillPreviewModel } from '@/types/bill-preview';
 
 type BillPreviewContextValue = {
@@ -134,6 +135,7 @@ export function BillPreviewProvider({ children }: { children: ReactNode }) {
               </View>
             </GestureHandlerRootView>
           </Animated.View>
+          <SnackbarHost topOffset={insets.top + 12} />
         </View>
       </Modal>
     </BillPreviewContext.Provider>

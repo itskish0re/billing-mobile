@@ -11,6 +11,8 @@ export type MastersFormPanelProps = {
   initialRow?: MasterListRow | null;
   createDefaults?: Record<string, string> | null;
   presentation?: MastersFormPresentation;
+  topInset?: number;
+  bottomInset?: number;
   onClose: () => void;
   onSaved?: (row?: MasterListRow) => void;
 };

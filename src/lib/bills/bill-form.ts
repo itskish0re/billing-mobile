@@ -208,6 +208,23 @@ function roundMoney(value: number): number {
   return Math.round(value * 100) / 100;
 }
 
+/**
+ * Commission rounding on the ones digit, to a multiple of 10.
+ * Last digit below 5 floors (`3523` → `3520`); 5 and above ceils
+ * (`3759` → `3760`).
+ */
+export function roundCommission(value: number): number {
+  if (!Number.isFinite(value) || value === 0) {
+    return 0;
+  }
+
+  const sign = value < 0 ? -1 : 1;
+  const rupees = Math.round(Math.abs(value));
+  const lastDigit = rupees % 10;
+  const base = rupees - lastDigit;
+  return sign * (lastDigit < 5 ? base : base + 10);
+}
+
 function calculateLoadFreight(line: BillLoadFormLine): number | null {
   const rate = toFormNumber(line.ratePerUnit);
   if (rate == null) {
@@ -245,7 +262,7 @@ export function recalculateBillForm(values: BillFormValues): BillFormValues {
   const totalFreight = roundMoney(
     loads.reduce((sum, line) => sum + (toFormNumber(line.freight) ?? 0), 0)
   );
-  const commission = roundMoney(totalFreight * BILL_COMMISSION_RATE);
+  const commission = roundCommission(totalFreight * BILL_COMMISSION_RATE);
   const truckLoanAllowed = isTruckLoanAllowed(loads);
 
   const charges =

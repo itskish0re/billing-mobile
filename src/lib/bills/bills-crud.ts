@@ -263,6 +263,55 @@ function loadWritePayload(
   };
 }
 
+function loadRpcPayload(line: BillLoadFormLine) {
+  return {
+    consignor_id: line.consignorId,
+    consignee_id: line.asPerBill ? null : line.consigneeId,
+    as_per_bill: line.asPerBill,
+    to_id: line.toId,
+    goods_id: line.goodsId,
+    unit_id: line.unitId,
+    weight_or_quantity: money(line.weightOrQuantity),
+    rate_per_unit: money(line.ratePerUnit),
+    freight: money(line.freight),
+    advance: money(line.advance),
+    topay: money(line.topay),
+    balance: money(line.balance),
+  };
+}
+
+async function saveBillViaRpc(params: SaveBillParams): Promise<number | null> {
+  const bill = billWritePayload(
+    params.values,
+    params.financialYearId,
+    params.userId,
+    params.values.billId != null ? 'update' : 'create'
+  );
+
+  const { data, error } = await db.rpc('save_bill', {
+    p_bill:
+      params.values.billId != null ? { ...bill, bill_id: params.values.billId } : bill,
+    p_loads: params.loads.map(loadRpcPayload),
+  });
+
+  if (error) {
+    const missingFn =
+      error.code === 'PGRST202' ||
+      (/save_bill/i.test(error.message ?? '') &&
+        /does not exist|could not find/i.test(error.message ?? ''));
+    if (missingFn) {
+      return null;
+    }
+    throwQueryError(error, 'Could not save the bill.');
+  }
+
+  const billId = Number(data);
+  if (!Number.isFinite(billId)) {
+    throw new Error('Could not save the bill.');
+  }
+  return billId;
+}
+
 async function insertLoads(
   loads: BillLoadFormLine[],
   billId: number,
@@ -365,21 +414,25 @@ async function updateBill({
   }
 
   const toInsert: { line: BillLoadFormLine; index: number }[] = [];
+  const updates: Promise<{ error: { code?: string; message?: string } | null }>[] = [];
 
   for (const [index, line] of loads.entries()) {
     const payload = loadWritePayload(line, index, billId, financialYearId, userId);
 
     if (line.loadId != null && existingIds.has(line.loadId)) {
       const { created_by: _createdBy, ...updatePayload } = payload;
-      const { error: loadError } = await db
-        .from('loads')
-        .update(updatePayload)
-        .eq('load_id', line.loadId);
-      throwQueryError(loadError, 'Could not update load lines.');
+      updates.push(db.from('loads').update(updatePayload).eq('load_id', line.loadId));
       continue;
     }
 
     toInsert.push({ line, index });
+  }
+
+  if (updates.length > 0) {
+    const results = await Promise.all(updates);
+    for (const result of results) {
+      throwQueryError(result.error, 'Could not update load lines.');
+    }
   }
 
   if (toInsert.length > 0) {
@@ -402,6 +455,11 @@ async function updateBill({
  * load numbers 1–3 stay reusable under the unique constraint.
  */
 export async function saveBill(params: SaveBillParams): Promise<number> {
+  const viaRpc = await saveBillViaRpc(params);
+  if (viaRpc != null) {
+    return viaRpc;
+  }
+
   if (params.values.billId != null) {
     return updateBill(params);
   }

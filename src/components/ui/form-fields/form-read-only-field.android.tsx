@@ -1,16 +1,20 @@
+import { Box, Column, Text, useMaterialColors } from '@expo/ui/jetpack-compose';
 import {
-  Column,
-  OutlinedTextField,
-  Shape,
-  Text,
-  useMaterialColors,
-  useNativeState,
-} from '@expo/ui/jetpack-compose';
-import type { TextFieldTextStyle } from '@expo/ui/jetpack-compose';
-import { fillMaxWidth, weight } from '@expo/ui/jetpack-compose/modifiers';
-import { useEffect } from 'react';
+  background,
+  border,
+  clip,
+  fillMaxWidth,
+  height,
+  offset,
+  padding,
+  Shapes,
+  weight,
+} from '@expo/ui/jetpack-compose/modifiers';
 
-import { FORM_FIELD_CORNERS } from '@/components/ui/form-fields/form-field-metrics';
+import {
+  FORM_FIELD_CORNER_RADIUS,
+  FORM_FIELD_MIN_HEIGHT,
+} from '@/components/ui/form-fields/form-field-metrics';
 
 export type FormReadOnlyFieldProps = {
   label: string;
@@ -23,50 +27,67 @@ export type FormReadOnlyFieldProps = {
 };
 
 /**
- * Auto-generated / derived value shown in a real `OutlinedTextField` with
- * `readOnly` so it lines up perfectly with the editable fields but can never be
- * focused into editing (no keyboard, no crash). The parent stays the source of
- * truth: the derived string is pushed into the native buffer via the setter.
- * Empty stays empty (no placeholder dash).
+ * Display-only outlined field. Uses a fixed 56dp frame (same as
+ * `OutlinedTextField`) so compact rows stay aligned. Values are Compose
+ * `Text` — Expo's `TextFieldView.setText` crashes on Android.
  */
 export function FormReadOnlyField({
   label,
   value,
   supportingText,
-  highlighted = false,
-  compact = false,
-  monospace = false,
+  highlighted,
+  compact,
+  monospace,
 }: FormReadOnlyFieldProps) {
   const colors = useMaterialColors();
-  const state = useNativeState(value);
-
-  useEffect(() => {
-    void state.set(value);
-  }, [value, state]);
-
-  const textStyle: TextFieldTextStyle = {
-    ...(monospace ? { fontFamily: 'monospace', letterSpacing: 1 } : {}),
-    ...(highlighted ? { color: colors.primary } : {}),
-  };
+  const outline = colors.outline;
+  const valueColor = highlighted
+    ? colors.primary
+    : value
+      ? colors.onSurface
+      : colors.onSurfaceVariant;
+  const longValue = value.length > 14;
 
   return (
-    <Column modifiers={compact ? [weight(1), fillMaxWidth()] : [fillMaxWidth()]}>
-      <OutlinedTextField
-        value={state}
-        readOnly
-        singleLine
-        textStyle={textStyle}
-        shape={Shape.RoundedCorner({ cornerRadii: FORM_FIELD_CORNERS })}
-        modifiers={[fillMaxWidth()]}>
-        <OutlinedTextField.Label>
-          <Text>{label}</Text>
-        </OutlinedTextField.Label>
-        {supportingText ? (
-          <OutlinedTextField.SupportingText>
-            <Text color={colors.onSurfaceVariant}>{supportingText}</Text>
-          </OutlinedTextField.SupportingText>
-        ) : null}
-      </OutlinedTextField>
+    <Column
+      modifiers={compact ? [weight(1), fillMaxWidth()] : [fillMaxWidth()]}
+      verticalArrangement={{ spacedBy: 4 }}>
+      <Box modifiers={[fillMaxWidth(), height(FORM_FIELD_MIN_HEIGHT)]}>
+        <Column
+          modifiers={[
+            fillMaxWidth(),
+            height(FORM_FIELD_MIN_HEIGHT),
+            clip(Shapes.RoundedCorner(FORM_FIELD_CORNER_RADIUS)),
+            border(1, outline),
+            padding(16, 8, 12, 8),
+          ]}
+          verticalArrangement="center">
+          <Text
+            maxLines={1}
+            overflow="ellipsis"
+            color={valueColor}
+            modifiers={[fillMaxWidth()]}
+            style={{
+              typography: longValue || compact ? 'bodyMedium' : 'bodyLarge',
+              ...(monospace ? { fontFamily: 'monospace', letterSpacing: 1 } : {}),
+            }}>
+            {value || ' '}
+          </Text>
+        </Column>
+
+        <Text
+          color={colors.onSurfaceVariant}
+          style={{ typography: 'bodySmall' }}
+          modifiers={[offset(12, -8), background(colors.surface), padding(4, 0, 4, 0)]}>
+          {label}
+        </Text>
+      </Box>
+
+      {supportingText ? (
+        <Text color={colors.onSurfaceVariant} style={{ typography: 'bodySmall' }}>
+          {supportingText}
+        </Text>
+      ) : null}
     </Column>
   );
 }

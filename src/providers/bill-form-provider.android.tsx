@@ -18,12 +18,19 @@ import {
 import { StatusBar } from 'expo-status-bar';
 import * as SystemUI from 'expo-system-ui';
 import { Modal, StyleSheet, View } from 'react-native';
-import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
+import {
+  initialWindowMetrics,
+  SafeAreaProvider,
+  useSafeAreaInsets,
+} from 'react-native-safe-area-context';
 
 import { BillFormPanel } from '@/components/bill-form/bill-form-panel';
 import { BRAND_SEED_COLOR, TabChrome, resolveColorScheme } from '@/constants/brand';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { SnackbarHost } from '@/providers/snackbar-provider';
 import type { BillFormValues } from '@/types/bill-form';
+
+const FORM_TOAST_GAP = 12;
 
 type BillFormContextValue = {
   isOpen: boolean;
@@ -40,6 +47,10 @@ const EXIT_MS = 320;
 
 const ENTER = EnterTransition.slideInHorizontally({ initialOffsetX: 1 });
 const EXIT = ExitTransition.slideOutHorizontally({ targetOffsetX: 1 });
+
+function resolveInset(live: number, fallback: number, windowInset: number) {
+  return Math.max(live, fallback, windowInset);
+}
 
 export function useBillForm() {
   const ctx = useContext(BillFormContext);
@@ -133,7 +144,7 @@ export function BillFormProvider({ children }: { children: ReactNode }) {
         statusBarTranslucent
         navigationBarTranslucent
         onRequestClose={close}>
-        <SafeAreaProvider>
+        <SafeAreaProvider initialMetrics={initialWindowMetrics}>
           <View style={[styles.modalRoot, { backgroundColor: chrome.statusBar }]}>
             <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
             <Host style={styles.host} seedColor={BRAND_SEED_COLOR} colorScheme={scheme}>
@@ -142,20 +153,60 @@ export function BillFormProvider({ children }: { children: ReactNode }) {
                 enterTransition={ENTER}
                 exitTransition={EXIT}
                 modifiers={[fillMaxSize()]}>
-                <BillFormPanel
-                  visible
+                <BillFormModalPanel
                   onClose={close}
                   mode={editValues ? 'edit' : 'create'}
                   initialValues={editValues}
-                  topInset={insets.top}
-                  bottomInset={insets.bottom}
+                  fallbackTopInset={insets.top}
+                  fallbackBottomInset={insets.bottom}
                 />
               </AnimatedVisibility>
             </Host>
+            <BillFormSnackbarHost fallbackTopInset={insets.top} />
           </View>
         </SafeAreaProvider>
       </Modal>
     </BillFormContext.Provider>
+  );
+}
+
+function BillFormSnackbarHost({ fallbackTopInset }: { fallbackTopInset: number }) {
+  const modalInsets = useSafeAreaInsets();
+  const windowTop = initialWindowMetrics?.insets.top ?? 0;
+  const topInset = Math.max(modalInsets.top, fallbackTopInset, windowTop);
+
+  return <SnackbarHost topOffset={topInset + FORM_TOAST_GAP} />;
+}
+
+function BillFormModalPanel({
+  onClose,
+  mode,
+  initialValues,
+  fallbackTopInset,
+  fallbackBottomInset,
+}: {
+  onClose: () => void;
+  mode: 'create' | 'edit';
+  initialValues: BillFormValues | null;
+  fallbackTopInset: number;
+  fallbackBottomInset: number;
+}) {
+  const modalInsets = useSafeAreaInsets();
+  const windowInsets = initialWindowMetrics?.insets;
+
+  return (
+    <BillFormPanel
+      visible
+      onClose={onClose}
+      mode={mode}
+      initialValues={initialValues}
+      topInset={resolveInset(modalInsets.top, fallbackTopInset, windowInsets?.top ?? 0)}
+      bottomInset={resolveInset(
+        modalInsets.bottom,
+        fallbackBottomInset,
+        windowInsets?.bottom ?? 0
+      )}
+    />
   );
 }
 

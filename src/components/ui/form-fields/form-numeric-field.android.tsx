@@ -1,11 +1,6 @@
-import { Column, OutlinedTextField, Shape, Text } from '@expo/ui/jetpack-compose';
-import type {
-  TextFieldImeAction,
-  TextFieldRef,
-  TextFieldTextStyle,
-} from '@expo/ui/jetpack-compose';
+import { Column, OutlinedTextField, Shape, Text, useNativeState } from '@expo/ui/jetpack-compose';
+import type { TextFieldImeAction, TextFieldTextStyle } from '@expo/ui/jetpack-compose';
 import { fillMaxWidth, weight } from '@expo/ui/jetpack-compose/modifiers';
-import { useEffect, useRef } from 'react';
 
 import { FORM_FIELD_CORNERS } from '@/components/ui/form-fields/form-field-metrics';
 import {
@@ -27,7 +22,11 @@ export type FormNumericFieldProps = {
   onSubmit?: () => void;
 };
 
-/** Uncontrolled decimal field matching {@link FormTextField}'s shape and focus wiring. */
+function seedNumeric(value: number | '' | undefined): string {
+  return typeof value === 'number' && Number.isFinite(value) ? String(value) : '';
+}
+
+/** Uncontrolled decimal field matching {@link FormTextField}'s shape. */
 export function FormNumericField({
   label,
   required = false,
@@ -40,19 +39,12 @@ export function FormNumericField({
   onChangeNumber,
   onSubmit,
 }: FormNumericFieldProps) {
-  const fieldRef = useRef<TextFieldRef>(null);
-
-  useEffect(() => {
-    if (typeof initialValue === 'number' && Number.isFinite(initialValue)) {
-      void fieldRef.current?.setText(String(initialValue));
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const state = useNativeState(seedNumeric(initialValue));
 
   return (
     <Column modifiers={compact ? [weight(1), fillMaxWidth()] : [fillMaxWidth()]}>
       <OutlinedTextField
-        ref={fieldRef}
+        value={state}
         singleLine
         enabled={enabled}
         textStyle={textStyle}

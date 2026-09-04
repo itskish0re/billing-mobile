@@ -17,7 +17,7 @@ import {
   verticalScroll,
   weight,
 } from '@expo/ui/jetpack-compose/modifiers';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Keyboard } from 'react-native';
 
 import { BillAdvanceSummary } from '@/components/bill-form/bill-advance-summary';
@@ -82,7 +82,7 @@ function applyCreatedMasterToValues(
     return {
       ...values,
       truckId: row.id,
-      truckNumber: row.title,
+      truckNumber: row.values.truck_number || row.title,
       nameBoardName: row.values.name_board_name ?? row.subtitle ?? '',
       ownerName: row.values.owner_name ?? '',
       ownerMobile: row.values.owner_phone ?? '',
@@ -145,7 +145,17 @@ export function BillFormPanel({
   const isEdit = mode === 'edit';
   const isSaving = saveMutation.isPending;
   const [masterCreate, setMasterCreate] = useState<MasterCreateState | null>(null);
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
   const masterMode: MastersFormMode = 'create';
+
+  useEffect(() => {
+    const shown = Keyboard.addListener('keyboardDidShow', () => setKeyboardVisible(true));
+    const hidden = Keyboard.addListener('keyboardDidHide', () => setKeyboardVisible(false));
+    return () => {
+      shown.remove();
+      hidden.remove();
+    };
+  }, []);
   const headerColor = colors.secondaryContainer;
   const headerContentColor = colors.onSecondaryContainer;
 
@@ -201,7 +211,9 @@ export function BillFormPanel({
 
   return (
     <Box modifiers={[fillMaxSize()]}>
-      <Column modifiers={[fillMaxSize(), background(headerColor)]} verticalArrangement={{ spacedBy: 0 }}>
+      <Column
+        modifiers={[fillMaxSize(), background(headerColor), imePadding()]}
+        verticalArrangement={{ spacedBy: 0 }}>
         <Column modifiers={[fillMaxWidth(), background(headerColor)]}>
           <Row
             modifiers={[
@@ -223,16 +235,16 @@ export function BillFormPanel({
         </Column>
 
         <Column
-          modifiers={[
-            fillMaxWidth(),
-            weight(1),
-            background(colors.surface),
-            clickable(() => Keyboard.dismiss(), { indication: false }),
-            imePadding(),
-            padding(16, 12, 16, 12),
-            verticalScroll(),
-          ]}
-          verticalArrangement={{ spacedBy: 12 }}>
+          modifiers={[fillMaxWidth(), weight(1), background(colors.surface)]}>
+          <Column
+            modifiers={[
+              fillMaxWidth(),
+              fillMaxSize(),
+              clickable(() => Keyboard.dismiss(), { indication: false }),
+              padding(16, 12, 16, 12),
+              verticalScroll(),
+            ]}
+            verticalArrangement={{ spacedBy: 12 }}>
           <Accordion
             type="multiple"
             defaultValue={['header', 'loads', 'charges', 'payment', 'advance']}>
@@ -288,13 +300,14 @@ export function BillFormPanel({
               </BillFormAccordionSection>
             ) : null}
           </Accordion>
+          </Column>
         </Column>
 
         <Column
           modifiers={[
             fillMaxWidth(),
             background(headerColor),
-            padding(0, 0, 0, bottomInset),
+            padding(0, 0, 0, keyboardVisible ? 0 : bottomInset),
           ]}>
           <Row
             modifiers={[fillMaxWidth(), padding(16, 12, 16, 12)]}
@@ -316,6 +329,8 @@ export function BillFormPanel({
         visible={masterFormOpen}
         mode={masterMode}
         presentation="side"
+        topInset={topInset}
+        bottomInset={bottomInset}
         createDefaults={masterCreate?.defaults ?? null}
         onClose={() => {
           setMasterCreate(null);

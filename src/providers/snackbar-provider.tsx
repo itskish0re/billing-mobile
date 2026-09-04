@@ -12,6 +12,14 @@ export type ShowSnackbarOptions = {
   durationMs?: number;
 };
 
+export type SnackbarHostProps = {
+  topOffset?: number;
+};
+
+export function SnackbarHost(_props: SnackbarHostProps) {
+  return null;
+}
+
 type SnackbarContextValue = {
   showSnackbar: (message: string, options?: ShowSnackbarOptions) => Promise<void>;
 };

@@ -74,6 +74,10 @@ export type Database = {
         Args: Record<string, never>;
         Returns: undefined;
       };
+      save_bill: {
+        Args: { p_bill: Record<string, unknown>; p_loads: unknown[] };
+        Returns: number;
+      };
     };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;

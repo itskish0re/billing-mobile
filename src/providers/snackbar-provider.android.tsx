@@ -16,9 +16,9 @@ import {
   Text,
   View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BRAND_SEED_COLOR, TabChrome } from '@/constants/brand';
-import { BottomTabInset } from '@/constants/theme';
 
 export type SnackbarVariant = 'success' | 'error';
 
@@ -26,6 +26,11 @@ export type ShowSnackbarOptions = {
   variant?: SnackbarVariant;
   /** Auto-dismiss duration in ms (default 4000). */
   durationMs?: number;
+};
+
+export type SnackbarHostProps = {
+  /** Distance from the top of the window. Defaults to the status-bar inset + 12. */
+  topOffset?: number;
 };
 
 type ActiveToast = {
@@ -37,11 +42,16 @@ type ActiveToast = {
 
 type SnackbarContextValue = {
   showSnackbar: (message: string, options?: ShowSnackbarOptions) => Promise<void>;
+  toast: ActiveToast | null;
+  clearToast: (token: number) => void;
+  registerHost: () => number;
+  unregisterHost: (id: number) => void;
+  topHostId: number | null;
 };
 
 const SnackbarContext = createContext<SnackbarContextValue | null>(null);
 
-const SNACKBAR_ABOVE_TABS = 12;
+const SNACKBAR_BELOW_STATUS = 12;
 
 const VARIANT_STYLES = {
   success: {
@@ -129,9 +139,7 @@ function ToastCard({
   });
 
   return (
-    <Animated.View
-      pointerEvents="box-none"
-      style={[styles.toastWrap, { opacity }]}>
+    <Animated.View pointerEvents="box-none" style={[styles.toastWrap, { opacity }]}>
       <View style={[styles.toast, { backgroundColor: colors.background }]}>
         <View style={styles.toastRow}>
           <Text style={[styles.message, { color: colors.text }]} numberOfLines={3}>
@@ -161,9 +169,49 @@ function ToastCard({
   );
 }
 
+function useSnackbarContext() {
+  const context = useContext(SnackbarContext);
+  if (!context) {
+    throw new Error('useSnackbar must be used within SnackbarProvider');
+  }
+  return context;
+}
+
+/**
+ * Renders the active toast. Only the last mounted host paints, so a host
+ * inside a Modal sits above the main-shell host that lives behind it.
+ */
+export function SnackbarHost({ topOffset }: SnackbarHostProps) {
+  const insets = useSafeAreaInsets();
+  const { toast, clearToast, registerHost, unregisterHost, topHostId } = useSnackbarContext();
+  const [hostId, setHostId] = useState<number | null>(null);
+
+  useEffect(() => {
+    const id = registerHost();
+    setHostId(id);
+    return () => {
+      unregisterHost(id);
+    };
+  }, [registerHost, unregisterHost]);
+
+  if (hostId == null || hostId !== topHostId || !toast) {
+    return null;
+  }
+
+  const top = topOffset ?? insets.top + SNACKBAR_BELOW_STATUS;
+
+  return (
+    <View pointerEvents="box-none" style={[styles.host, { top }]}>
+      <ToastCard key={toast.token} toast={toast} onFinished={clearToast} />
+    </View>
+  );
+}
+
 export function SnackbarProvider({ children }: { children: ReactNode }) {
   const [toast, setToast] = useState<ActiveToast | null>(null);
+  const [hostIds, setHostIds] = useState<number[]>([]);
   const tokenRef = useRef(0);
+  const hostSeqRef = useRef(0);
   const finishResolverRef = useRef<(() => void) | null>(null);
   const finishedTokenRef = useRef<number | null>(null);
 
@@ -178,57 +226,68 @@ export function SnackbarProvider({ children }: { children: ReactNode }) {
     resolve?.();
   }, []);
 
-  const showSnackbar = useCallback(
-    async (message: string, options?: ShowSnackbarOptions) => {
-      const trimmed = message.trim();
-      if (!trimmed) {
-        return;
-      }
+  const registerHost = useCallback(() => {
+    const id = hostSeqRef.current + 1;
+    hostSeqRef.current = id;
+    setHostIds((current) => [...current, id]);
+    return id;
+  }, []);
 
-      finishResolverRef.current?.();
-      finishResolverRef.current = null;
+  const unregisterHost = useCallback((id: number) => {
+    setHostIds((current) => current.filter((hostId) => hostId !== id));
+  }, []);
 
-      const token = tokenRef.current + 1;
-      tokenRef.current = token;
-      finishedTokenRef.current = null;
+  const showSnackbar = useCallback(async (message: string, options?: ShowSnackbarOptions) => {
+    const trimmed = message.trim();
+    if (!trimmed) {
+      return;
+    }
 
-      await new Promise<void>((resolve) => {
-        finishResolverRef.current = resolve;
-        setToast({
-          message: trimmed,
-          variant: options?.variant ?? 'success',
-          durationMs: options?.durationMs ?? 4000,
-          token,
-        });
+    finishResolverRef.current?.();
+    finishResolverRef.current = null;
+
+    const token = tokenRef.current + 1;
+    tokenRef.current = token;
+    finishedTokenRef.current = null;
+
+    await new Promise<void>((resolve) => {
+      finishResolverRef.current = resolve;
+      setToast({
+        message: trimmed,
+        variant: options?.variant ?? 'success',
+        durationMs: options?.durationMs ?? 4000,
+        token,
       });
-    },
-    []
-  );
+    });
+  }, []);
 
-  const value = useMemo(() => ({ showSnackbar }), [showSnackbar]);
+  const topHostId = hostIds[hostIds.length - 1] ?? null;
+
+  const value = useMemo(
+    () => ({
+      showSnackbar,
+      toast,
+      clearToast,
+      registerHost,
+      unregisterHost,
+      topHostId,
+    }),
+    [clearToast, registerHost, showSnackbar, toast, topHostId, unregisterHost]
+  );
 
   return (
     <SnackbarContext.Provider value={value}>
       <View style={styles.container}>
         {children}
-        {toast ? (
-          <View pointerEvents="box-none" style={styles.host}>
-            <ToastCard key={toast.token} toast={toast} onFinished={clearToast} />
-          </View>
-        ) : null}
+        <SnackbarHost />
       </View>
     </SnackbarContext.Provider>
   );
 }
 
 export function useSnackbar() {
-  const context = useContext(SnackbarContext);
-
-  if (!context) {
-    throw new Error('useSnackbar must be used within SnackbarProvider');
-  }
-
-  return context;
+  const context = useSnackbarContext();
+  return { showSnackbar: context.showSnackbar };
 }
 
 const styles = StyleSheet.create({
@@ -236,8 +295,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   host: {
-    bottom: BottomTabInset + SNACKBAR_ABOVE_TABS,
-    elevation: 12,
+    elevation: 24,
     left: 0,
     position: 'absolute',
     right: 0,

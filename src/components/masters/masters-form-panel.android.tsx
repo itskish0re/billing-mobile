@@ -17,10 +17,13 @@ import {
   fillMaxHeight,
   fillMaxSize,
   fillMaxWidth,
+  imePadding,
   padding,
+  verticalScroll,
   weight,
 } from '@expo/ui/jetpack-compose/modifiers';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { Keyboard } from 'react-native';
 
 import { MasterLookupDropdown } from '@/components/bill-form/master-lookup-dropdown';
 import { MASTER_ENTITY_CONFIG } from '@/components/masters/masters-config';
@@ -48,6 +51,10 @@ export type MastersFormPanelProps = {
   createDefaults?: Record<string, string> | null;
   /** Default `side`. Use when stacking over the bill form. */
   presentation?: MastersFormPresentation;
+  /** Status-bar inset when this overlay is edge-to-edge (bill form). */
+  topInset?: number;
+  /** Navigation-bar inset when this overlay is edge-to-edge (bill form). */
+  bottomInset?: number;
   onClose: () => void;
   /** Called after a successful create/update (before snackbar). */
   onSaved?: (row?: MasterListRow) => void;
@@ -96,14 +103,12 @@ function MasterFormFieldInput({
     get: () => mirrorRef.current,
     set: (next) => {
       mirrorRef.current = next;
-      void value.set(next);
     },
   });
 
   useEffect(() => {
     mirrorRef.current = initialValue;
-    void value.set(initialValue);
-  }, [initialValue, value]);
+  }, [initialValue]);
 
   const keyboardType =
     field.keyboardType === 'phone'
@@ -226,6 +231,8 @@ export function MastersFormPanel({
   initialRow,
   createDefaults = null,
   presentation = 'side',
+  topInset = 0,
+  bottomInset = 0,
   onClose,
   onSaved,
 }: MastersFormPanelProps) {
@@ -235,6 +242,7 @@ export function MastersFormPanel({
   const { showSnackbar } = useSnackbar();
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const fieldStates = useRef<Record<string, FieldState>>({});
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
   const [nestedLookupCreate, setNestedLookupCreate] = useState<NestedLookupCreate | null>(null);
   const [lookupOverrides, setLookupOverrides] = useState<
     Record<string, { id: string; label: string }>
@@ -253,6 +261,15 @@ export function MastersFormPanel({
       setNestedLookupCreate(null);
     }
   }, [visible, formIdentity]);
+
+  useEffect(() => {
+    const shown = Keyboard.addListener('keyboardDidShow', () => setKeyboardVisible(true));
+    const hidden = Keyboard.addListener('keyboardDidHide', () => setKeyboardVisible(false));
+    return () => {
+      shown.remove();
+      hidden.remove();
+    };
+  }, []);
 
   const title = useMemo(() => {
     return mode === 'create' ? `New ${config.labelSingular}` : `Edit ${config.labelSingular}`;
@@ -353,7 +370,8 @@ export function MastersFormPanel({
             weight(isFullWidth ? 1 : 0.88),
             fillMaxHeight(),
             background(colors.surface),
-            padding(16, 12, 16, 16),
+            imePadding(),
+            padding(16, topInset + 12, 16, (keyboardVisible ? 0 : bottomInset) + 12),
           ]}
           verticalArrangement={{ spacedBy: 0 }}>
           <Row
@@ -369,7 +387,7 @@ export function MastersFormPanel({
 
           <Column
             key={formIdentity}
-            modifiers={[fillMaxWidth(), weight(1)]}
+            modifiers={[fillMaxWidth(), weight(1), verticalScroll()]}
             verticalArrangement={{ spacedBy: 12 }}>
             {config.formFields.map((field) => {
               const baseValue =
@@ -412,7 +430,7 @@ export function MastersFormPanel({
 
               return (
                 <MasterFormFieldInput
-                  key={`${formIdentity}-${field.key}`}
+                  key={`${formIdentity}-${field.key}-${baseValue}`}
                   field={field}
                   initialValue={baseValue}
                   error={fieldErrors[field.key]}
@@ -442,6 +460,8 @@ export function MastersFormPanel({
           visible
           mode="create"
           presentation="side"
+          topInset={topInset}
+          bottomInset={bottomInset}
           createDefaults={nestedLookupCreate.defaults}
           onClose={() => setNestedLookupCreate(null)}
           onSaved={(row) => {

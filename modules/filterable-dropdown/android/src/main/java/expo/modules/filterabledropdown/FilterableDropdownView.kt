@@ -73,6 +73,9 @@ data class FilterableDropdownProps(
   val modifiers: ModifierList = emptyList()
 ) : ComposeProps
 
+private fun compactKey(value: String): String =
+  value.filter { !it.isWhitespace() && it != '-' }.lowercase()
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FunctionalComposableScope.FilterableDropdownContent(
@@ -97,7 +100,8 @@ fun FunctionalComposableScope.FilterableDropdownContent(
   }
 
   val normalized = text.trim().lowercase()
-  val filtered = remember(normalized, props.items, props.maxResults) {
+  val compactQuery = compactKey(text)
+  val filtered = remember(normalized, compactQuery, props.items, props.maxResults) {
     val limit = props.maxResults.coerceIn(1, 200)
     if (normalized.isEmpty()) {
       props.items.take(limit)
@@ -109,16 +113,18 @@ fun FunctionalComposableScope.FilterableDropdownContent(
             .filter { it.isNotBlank() }
             .joinToString(" ")
             .lowercase()
-          haystack.contains(normalized)
+          haystack.contains(normalized) || compactKey(haystack).contains(compactQuery)
         }
         .take(limit)
         .toList()
     }
   }
 
-  val hasExactMatch = remember(normalized, props.items) {
+  val hasExactMatch = remember(normalized, compactQuery, props.items) {
     normalized.isNotEmpty() &&
-      props.items.any { it.title.trim().lowercase() == normalized }
+      props.items.any { item ->
+        item.title.trim().lowercase() == normalized || compactKey(item.title) == compactQuery
+      }
   }
 
   val showCreate =

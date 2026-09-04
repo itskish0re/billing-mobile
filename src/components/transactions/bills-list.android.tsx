@@ -1,21 +1,27 @@
 import {
+  Box,
   Column,
   Icon,
-  IconButton,
   LazyColumn,
   OutlinedCard,
   Row,
   Text,
   useMaterialColors,
 } from '@expo/ui/jetpack-compose';
-import { fillMaxSize, fillMaxWidth, padding, weight } from '@expo/ui/jetpack-compose/modifiers';
+import {
+  clickable,
+  clip,
+  fillMaxSize,
+  fillMaxWidth,
+  padding,
+  Shapes,
+  weight,
+} from '@expo/ui/jetpack-compose/modifiers';
 import { useMemo, useState } from 'react';
 
-import { parseIsoDate } from '@/lib/bills/bill-form';
 import { mapBillListRowToPreview } from '@/lib/bills/bill-preview';
 import { formatTruckNumber } from '@/lib/bills/format-truck-number';
 import { shareBillPdf } from '@/lib/bills/share-bill-pdf';
-import { formatTransactionDate } from '@/lib/transactions/format-transaction-date';
 import { useBillsList } from '@/hooks/use-bills-list';
 import { useSnackbar } from '@/providers/snackbar-provider';
 import type { BillListRow } from '@/types/bill-list';
@@ -47,6 +53,33 @@ function CenteredMessage({ text }: { text: string }) {
   );
 }
 
+function CardAction({
+  icon,
+  enabled = true,
+  onClick,
+}: {
+  icon: number;
+  enabled?: boolean;
+  onClick: () => void;
+}) {
+  const colors = useMaterialColors();
+
+  return (
+    <Box
+      modifiers={[
+        clip(Shapes.RoundedCorner(6)),
+        ...(enabled ? [clickable(onClick)] : []),
+        padding(5, 5, 5, 5),
+      ]}>
+      <Icon
+        source={icon}
+        size={20}
+        tint={enabled ? colors.primary : colors.onSurfaceVariant}
+      />
+    </Box>
+  );
+}
+
 function BillListCard({
   row,
   sharing,
@@ -61,10 +94,8 @@ function BillListCard({
   onShare: (row: BillListRow) => void;
 }) {
   const colors = useMaterialColors();
-  const billDate = parseIsoDate(row.billDate);
   const firstTo = row.loads[0]?.toLocationName ?? '';
   const formattedTruck = formatTruckNumber(row.truckNumber);
-  const subtitle = [row.nameBoardName, formattedTruck].filter((part) => part.trim()).join(' · ');
   const route = `${row.fromLocationName || '—'} → ${firstTo || '—'}`;
 
   return (
@@ -72,53 +103,54 @@ function BillListCard({
       modifiers={[fillMaxWidth()]}
       colors={{ containerColor: colors.surface }}
       border={{ color: colors.outlineVariant, width: 1 }}>
-      <Row
-        modifiers={[fillMaxWidth(), padding(16, 12, 8, 12)]}
-        verticalAlignment="center"
-        horizontalArrangement={{ spacedBy: 4 }}>
-        <Column modifiers={[weight(1)]} verticalArrangement={{ spacedBy: 2 }}>
-          <Row
-            modifiers={[fillMaxWidth()]}
-            verticalAlignment="center"
-            horizontalArrangement="spaceBetween">
-            <Row verticalAlignment="center" horizontalArrangement={{ spacedBy: 8 }}>
-              <Text color={colors.onSurface} style={{ typography: 'titleMedium' }}>
-                {row.billNumber ? `Bill ${row.billNumber}` : 'Bill'}
-              </Text>
-              {row.isCancelled ? (
-                <Text color={colors.error} style={{ typography: 'labelSmall' }}>
-                  Cancelled
-                </Text>
-              ) : null}
-            </Row>
-            {billDate ? (
-              <Text color={colors.onSurfaceVariant} style={{ typography: 'bodySmall' }}>
-                {formatTransactionDate(billDate)}
+      <Column
+        modifiers={[fillMaxWidth(), padding(12, 8, 12, 8)]}
+        verticalArrangement={{ spacedBy: 2 }}>
+        <Row modifiers={[fillMaxWidth()]} verticalAlignment="center" horizontalArrangement="spaceBetween">
+          <Row verticalAlignment="center" horizontalArrangement={{ spacedBy: 6 }}>
+            <Text color={colors.onSurface} style={{ typography: 'titleSmall' }}>
+              {row.billNumber ? `BILL ${row.billNumber}` : 'BILL'}
+            </Text>
+            {row.isCancelled ? (
+              <Text color={colors.error} style={{ typography: 'labelSmall' }}>
+                Cancelled
               </Text>
             ) : null}
           </Row>
-
-          {subtitle ? (
-            <Text color={colors.onSurfaceVariant} maxLines={1} style={{ typography: 'bodyMedium' }}>
-              {subtitle}
-            </Text>
-          ) : null}
-
-          <Text color={colors.onSurfaceVariant} maxLines={1} style={{ typography: 'bodySmall' }}>
+          <Text
+            modifiers={[weight(1)]}
+            maxLines={1}
+            overflow="ellipsis"
+            color={colors.onSurface}
+            style={{ typography: 'bodyMedium', textAlign: 'end' }}>
             {route}
           </Text>
-        </Column>
+        </Row>
 
-        <IconButton onClick={() => onEdit(row)}>
-          <Icon source={EDIT_ICON} size={20} tint={colors.primary} />
-        </IconButton>
-        <IconButton onClick={() => onPreview(row)}>
-          <Icon source={PREVIEW_ICON} size={20} tint={colors.primary} />
-        </IconButton>
-        <IconButton enabled={!sharing} onClick={() => onShare(row)}>
-          <Icon source={SHARE_ICON} size={20} tint={colors.primary} />
-        </IconButton>
-      </Row>
+        <Text
+          maxLines={1}
+          overflow="ellipsis"
+          color={colors.onSurface}
+          style={{ typography: 'bodyMedium' }}>
+          {row.nameBoardName.trim() || '—'}
+        </Text>
+
+        <Row modifiers={[fillMaxWidth()]} verticalAlignment="center" horizontalArrangement="spaceBetween">
+          <Text
+            modifiers={[weight(1)]}
+            maxLines={1}
+            overflow="ellipsis"
+            color={colors.onSurface}
+            style={{ typography: 'bodyMedium', fontFamily: 'monospace' }}>
+            {formattedTruck || '—'}
+          </Text>
+          <Row horizontalArrangement={{ spacedBy: 2 }} verticalAlignment="center">
+            <CardAction icon={EDIT_ICON} onClick={() => onEdit(row)} />
+            <CardAction icon={PREVIEW_ICON} onClick={() => onPreview(row)} />
+            <CardAction icon={SHARE_ICON} enabled={!sharing} onClick={() => onShare(row)} />
+          </Row>
+        </Row>
+      </Column>
     </OutlinedCard>
   );
 }
@@ -212,7 +244,7 @@ export function BillsList({
     <LazyColumn
       modifiers={[fillMaxWidth(), fillMaxSize(), weight(1)]}
       contentPadding={{ start: 16, top: 8, end: 16, bottom: 88 }}
-      verticalArrangement={{ spacedBy: 12 }}>
+      verticalArrangement={{ spacedBy: 8 }}>
       {filtered.map((row) => (
         <BillListCard
           key={row.billId}

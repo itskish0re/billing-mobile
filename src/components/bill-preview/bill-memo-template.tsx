@@ -9,6 +9,7 @@ import {
   formatBillPreviewWeight,
   prepareBillPreviewLoads,
 } from '@/lib/bills/bill-preview';
+import { formatTruckNumber } from '@/lib/bills/format-truck-number';
 import type { BillPreviewLoadLine, BillPreviewModel } from '@/types/bill-preview';
 
 /** Fixed on-screen size of the memo (A4 portrait @ ~96dpi). */
@@ -198,7 +199,9 @@ export function BillMemoTemplate({ data }: BillMemoTemplateProps) {
           </View>
           <View style={styles.truckBox}>
             <Text style={styles.truckBoxLabel}>Truck Number :</Text>
-            <Text style={styles.truckBoxValue}>{data.truckNumber}</Text>
+            <Text style={styles.truckBoxValue}>
+              {formatTruckNumber(data.truckNumber) || data.truckNumber}
+            </Text>
           </View>
         </View>
 

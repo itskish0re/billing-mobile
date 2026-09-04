@@ -1,13 +1,11 @@
-import { Column, OutlinedTextField, Shape, Text } from '@expo/ui/jetpack-compose';
+import { Column, OutlinedTextField, Shape, Text, useNativeState } from '@expo/ui/jetpack-compose';
 import type {
   TextFieldImeAction,
   TextFieldKeyboardType,
   TextFieldCapitalization,
-  TextFieldRef,
   TextFieldTextStyle,
 } from '@expo/ui/jetpack-compose';
 import { fillMaxWidth, weight } from '@expo/ui/jetpack-compose/modifiers';
-import { useEffect, useRef } from 'react';
 
 import { FORM_FIELD_CORNERS } from '@/components/ui/form-fields/form-field-metrics';
 
@@ -30,9 +28,8 @@ export type FormTextFieldProps = {
 };
 
 /**
- * Uncontrolled outlined text field with a uniform rounded shape. It omits
- * `value` (the parent stays the source of truth via `onChangeText`) so
- * Host/theme remounts never release a bound `useNativeState` SharedObject.
+ * Outlined field seeded via `useNativeState`. Imperative `ref.setText` is
+ * avoided — Expo currently rejects it with a ComposeFunctionHolder cast error.
  */
 export function FormTextField({
   label,
@@ -49,20 +46,12 @@ export function FormTextField({
   onChangeText,
   onSubmit,
 }: FormTextFieldProps) {
-  const fieldRef = useRef<TextFieldRef>(null);
-
-  useEffect(() => {
-    if (initialText != null && initialText !== '') {
-      void fieldRef.current?.setText(initialText);
-    }
-    // Seed once for this mounted identity; remount (via key) reseeds.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const state = useNativeState(initialText ?? '');
 
   return (
     <Column modifiers={compact ? [weight(1), fillMaxWidth()] : [fillMaxWidth()]}>
       <OutlinedTextField
-        ref={fieldRef}
+        value={state}
         singleLine
         enabled={enabled}
         autoFocus={autoFocus}

@@ -1,4 +1,5 @@
 import { BILL_FORM_MAX_LOAD_ROWS, toFormNumber } from '@/lib/bills/bill-form';
+import { formatTruckNumber } from '@/lib/bills/format-truck-number';
 import type { BillFormValues } from '@/types/bill-form';
 import type { BillListRow } from '@/types/bill-list';
 import type {
@@ -206,7 +207,7 @@ export function mapBillFormToPreview(values: BillFormValues): BillPreviewModel {
     billDate: values.billDate,
     fromLocationName: values.fromLocationName,
     toLocationName: primaryLoad?.toLocationName ?? '',
-    truckNumber: values.truckNumber,
+    truckNumber: formatTruckNumber(values.truckNumber),
     nameBoardName: values.nameBoardName,
     ownerName: values.ownerName,
     ownerMobile: values.ownerMobile,
@@ -260,7 +261,7 @@ export function mapBillListRowToPreview(row: BillListRow): BillPreviewModel {
     billDate: row.billDate,
     fromLocationName: row.fromLocationName,
     toLocationName: loads[0]?.toLocationName ?? '',
-    truckNumber: row.truckNumber,
+    truckNumber: formatTruckNumber(row.truckNumber),
     nameBoardName: row.nameBoardName,
     ownerName: row.ownerName,
     ownerMobile: row.ownerMobile,

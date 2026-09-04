@@ -1,5 +1,6 @@
 import type { AppTabItem } from '@/components/ui/tab-row';
 import type { MasterEntityConfig, MastersTab } from '@/components/masters/masters-types';
+import { formatTruckNumber } from '@/lib/bills/format-truck-number';
 
 function asString(value: unknown, fallback = ''): string {
   if (value == null) {
@@ -68,7 +69,7 @@ export const MASTER_ENTITY_CONFIG: Record<MastersTab, MasterEntityConfig> = {
     ],
     mapRow: (row) => ({
       id: Number(row.truck_id),
-      title: asString(row.truck_number),
+      title: formatTruckNumber(asString(row.truck_number)),
       subtitle: asString(row.name_board_name) || undefined,
       values: {
         truck_number: asString(row.truck_number),
