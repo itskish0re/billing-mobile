@@ -44,7 +44,7 @@ export function buildBillMemoHtml(data: BillPreviewModel): string {
         <td class="left">${row.asPerBill ? `<span class="apb">${text(consignee)}</span>` : text(consignee)}${
           to ? `<div class="to">To: ${text(to)}</div>` : ''
         }</td>
-        <td class="left">${text(row.goodsName)}</td>
+        <td>${text(row.goodsName)}</td>
         <td>${text(formatBillPreviewWeight(row.weightOrQuantity))}</td>
         <td>${text(formatBillPreviewAmount(row.ratePerUnit))}${
           unit ? ` <span class="unit">${text(unit)}</span>` : ''
@@ -119,7 +119,17 @@ export function buildBillMemoHtml(data: BillPreviewModel): string {
     .top { display: table; width: 100%; margin-bottom: 6px; }
     .top > * { display: table-cell; vertical-align: middle; }
     .motto { font-weight: 600; letter-spacing: 0.5px; width: 28%; }
-    .banner { background: #1a4f9c; color: #fff; text-align: center; font-weight: 700; letter-spacing: 1.2px; padding: 6px 18px; width: 36%; }
+    .banner {
+      background: #1a4f9c;
+      color: #fff;
+      text-align: center;
+      font-weight: 700;
+      letter-spacing: 1.2px;
+      padding: 6px 28px 7px;
+      width: 36%;
+      -webkit-clip-path: polygon(0 0, 100% 0, 86% 100%, 14% 100%);
+      clip-path: polygon(0 0, 100% 0, 86% 100%, 14% 100%);
+    }
     .banner div { line-height: 1.25; }
     .phone { text-align: right; font-weight: 700; font-size: 13px; width: 36%; }
     .brand { display: table; width: 100%; margin-bottom: 8px; }
@@ -141,16 +151,27 @@ export function buildBillMemoHtml(data: BillPreviewModel): string {
     }
     table.meta .lbl { font-weight: 600; white-space: nowrap; width: 28%; }
     .red { color: #c8232c; font-weight: 700; font-size: 15px; }
-    table.loads { margin-top: 0; border-top: 0; }
-    table.loads th { font-weight: 600; text-align: center; }
-    table.loads td { text-align: center; height: 46px; }
+    table.loads { margin-top: 0; border-top: 0; table-layout: fixed; }
+    table.loads col.c-sno { width: 4%; }
+    table.loads col.c-consignor { width: 10%; }
+    table.loads col.c-consignee { width: 12%; }
+    table.loads col.c-goods { width: 8%; }
+    table.loads col.c-weight { width: 11%; }
+    table.loads col.c-rate { width: 7.8%; }
+    table.loads col.c-num { width: 11.8%; }
+    table.loads th { font-weight: 600; text-align: center; white-space: nowrap; font-size: 10px; }
+    table.loads td { text-align: center; height: 40px; }
     table.loads td.left { text-align: left; }
-    .c-sno { width: 4%; }
     .apb { font-family: monospace; font-size: 8px; font-weight: 600; letter-spacing: 0.6px; }
     .to { font-size: 9px; font-weight: 500; margin-top: 2px; }
     .unit { font-size: 8px; font-weight: 500; }
+    table.loads td.foot-loan,
+    table.loads td.foot-freight,
+    table.loads td.foot-empty { vertical-align: middle; }
+    table.loads td.foot-loan,
+    table.loads td.foot-freight { text-align: left; }
     .foot-label { font-weight: 600; }
-    .foot-value { font-weight: 700; text-align: center; }
+    .foot-value { font-weight: 700; float: right; }
     .footer { display: table; width: 100%; margin-top: 20px; }
     .footer > * { display: table-cell; vertical-align: top; width: 50%; padding: 0 8px; }
     h3 { font-size: 11px; font-weight: 600; margin: 0 0 4px; }
@@ -158,7 +179,7 @@ export function buildBillMemoHtml(data: BillPreviewModel): string {
     .term span { display: table-cell; width: 18px; text-align: right; padding-right: 4px; }
     .term p { display: table-cell; margin: 0; font-weight: 500; line-height: 1.4; }
     table.pay { margin-top: 4px; }
-    table.pay th { width: 60px; text-align: left; }
+    table.pay th { width: 88px; text-align: left; white-space: nowrap; }
     table.pay .pay-opt { text-align: center; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; }
     table.sum td.num, .num { text-align: right; }
     table.sum tr.total td { font-weight: 700; border-top: 2px solid #111; }
@@ -228,6 +249,18 @@ export function buildBillMemoHtml(data: BillPreviewModel): string {
       </table>
 
       <table class="loads">
+        <colgroup>
+          <col class="c-sno" />
+          <col class="c-consignor" />
+          <col class="c-consignee" />
+          <col class="c-goods" />
+          <col class="c-weight" />
+          <col class="c-rate" />
+          <col class="c-num" />
+          <col class="c-num" />
+          <col class="c-num" />
+          <col class="c-num" />
+        </colgroup>
         <thead>
           <tr>
             <th>S. No.</th>
@@ -245,15 +278,17 @@ export function buildBillMemoHtml(data: BillPreviewModel): string {
         <tbody>${loadBody}</tbody>
         <tfoot>
           <tr>
-            <td></td>
-            <td colspan="4" class="left"><span class="foot-label">Truck Loan</span> <span class="foot-value">${
-              data.truckLoan ? text(formatBillPreviewAmount(data.total)) : ''
-            }</span></td>
-            <td></td>
-            <td colspan="3"><span class="foot-label">Total Freight</span> <span class="foot-value">${text(
-              formatBillPreviewAmount(data.totalFreight)
-            )}</span></td>
-            <td></td>
+            <td colspan="3" class="foot-loan">
+              <span class="foot-label">Truck Loan</span>
+              <span class="foot-value">${
+                data.truckLoan ? text(formatBillPreviewAmount(data.total)) : ''
+              }</span>
+            </td>
+            <td colspan="4" class="foot-freight">
+              <span class="foot-label">Total Freight</span>
+              <span class="foot-value">${text(formatBillPreviewAmount(data.totalFreight))}</span>
+            </td>
+            <td colspan="3" class="foot-empty"></td>
           </tr>
         </tfoot>
       </table>
@@ -279,10 +314,12 @@ export function buildBillMemoHtml(data: BillPreviewModel): string {
       </div>
 
       <div class="signs">
+        <!--
         <div>
           <div class="sign-line"></div>
           <div class="sign-label">Truck Owner's &amp; Driver's Signature</div>
         </div>
+        -->
         <div class="right">
           <div class="sign-line"></div>
           <div class="sign-label">${text(company.signatureLabel)}</div>

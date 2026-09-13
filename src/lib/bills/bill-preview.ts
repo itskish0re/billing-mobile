@@ -1,4 +1,8 @@
-import { BILL_FORM_MAX_LOAD_ROWS, toFormNumber } from '@/lib/bills/bill-form';
+import {
+  BILL_FORM_MAX_LOAD_ROWS,
+  collectSavableLoadLines,
+  toFormNumber,
+} from '@/lib/bills/bill-form';
 import { formatTruckNumber } from '@/lib/bills/format-truck-number';
 import type { BillFormValues } from '@/types/bill-form';
 import type { BillListRow } from '@/types/bill-list';
@@ -99,16 +103,32 @@ function createEmptyLoadRow(loadNumber: number): BillPreviewLoadLine {
   };
 }
 
-/** Caps at {@link BILL_MEMO_MAX_LOAD_ROWS}; renumbers S. No. 1…n from load count. */
-export function prepareBillPreviewLoads(loads: BillPreviewLoadLine[]): BillPreviewLoadLine[] {
-  const sorted = [...loads].sort((a, b) => a.loadNumber - b.loadNumber);
-  const capped = sorted.slice(0, BILL_MEMO_MAX_LOAD_ROWS);
+function isPreviewLoadBlank(line: BillPreviewLoadLine): boolean {
+  return (
+    !line.consignorName.trim() &&
+    !line.consigneeName.trim() &&
+    !line.asPerBill &&
+    !line.toLocationName.trim() &&
+    !line.goodsName.trim() &&
+    !line.unitName.trim() &&
+    line.weightOrQuantity == null &&
+    line.ratePerUnit == null &&
+    line.freight == null
+  );
+}
 
-  if (capped.length === 0) {
+/** Caps at {@link BILL_MEMO_MAX_LOAD_ROWS}; drops unused extra lines; renumbers S. No. */
+export function prepareBillPreviewLoads(loads: BillPreviewLoadLine[]): BillPreviewLoadLine[] {
+  const filled = [...loads]
+    .sort((a, b) => a.loadNumber - b.loadNumber)
+    .filter((line) => !isPreviewLoadBlank(line))
+    .slice(0, BILL_MEMO_MAX_LOAD_ROWS);
+
+  if (filled.length === 0) {
     return [createEmptyLoadRow(1)];
   }
 
-  return capped.map((line, index) => ({ ...line, loadNumber: index + 1 }));
+  return filled.map((line, index) => ({ ...line, loadNumber: index + 1 }));
 }
 
 export type BillPreviewChargeRow = {
@@ -176,7 +196,7 @@ function normalizePayBy(payBy: string | null): BillPreviewPayBy | null {
 
 /** Maps live bill-form state to the controlled preview model. */
 export function mapBillFormToPreview(values: BillFormValues): BillPreviewModel {
-  const loads: BillPreviewLoadLine[] = values.loads.map((line, index) => ({
+  const loads: BillPreviewLoadLine[] = collectSavableLoadLines(values.loads).map((line, index) => ({
     loadNumber: line.loadNumber || index + 1,
     consignorName: line.consignorName,
     consigneeName: line.consigneeName,

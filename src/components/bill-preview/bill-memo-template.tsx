@@ -20,14 +20,21 @@ const INK = '#111';
 const BLUE = '#1a4f9c';
 const RED = '#c8232c';
 
-/** Load-table column flex ratios (sum 1000) mirroring the web CSS grid. */
+/** Load-table column widths. Header, body, and footer share these percents. */
 const COL = {
-  sno: 40,
-  consignor: 100,
-  consignee: 120,
-  goods: 80,
-  weight: 70,
-  num: 118,
+  sno: '4%',
+  consignor: '10%',
+  consignee: '12%',
+  goods: '8%',
+  weight: '11%',
+  rate: '7.8%',
+  num: '11.8%',
+} as const;
+
+const FOOT = {
+  truckLoan: '26%',
+  totalFreight: '38.6%',
+  empty: '35.4%',
 } as const;
 
 type BillMemoTemplateProps = {
@@ -67,13 +74,13 @@ function MetaField({
 }
 
 function LoadCell({
-  flex,
+  width,
   children,
   last = false,
   left = false,
   style,
 }: {
-  flex: number;
+  width: string;
   children?: React.ReactNode;
   last?: boolean;
   left?: boolean;
@@ -83,7 +90,7 @@ function LoadCell({
     <View
       style={[
         styles.loadCell,
-        { flex },
+        { width },
         last ? null : styles.cellBorderRight,
         left ? styles.cellLeft : null,
         style,
@@ -93,29 +100,29 @@ function LoadCell({
   );
 }
 
-function LoadRow({ row }: { row: BillPreviewLoadLine }) {
+function LoadRow({ row, last }: { row: BillPreviewLoadLine; last?: boolean }) {
   const consigneeName = formatBillPreviewConsigneeName(row.consigneeName, row.asPerBill);
   const to = row.toLocationName?.trim();
 
   return (
-    <View style={styles.loadRow}>
-      <LoadCell flex={COL.sno}>
+    <View style={[styles.loadRow, last ? styles.loadRowLast : null]}>
+      <LoadCell width={COL.sno}>
         <Text style={styles.loadSno}>{row.loadNumber}</Text>
       </LoadCell>
-      <LoadCell flex={COL.consignor} left>
+      <LoadCell width={COL.consignor} left>
         <Text style={styles.loadText}>{row.consignorName}</Text>
       </LoadCell>
-      <LoadCell flex={COL.consignee} left>
+      <LoadCell width={COL.consignee} left>
         <Text style={[styles.loadText, row.asPerBill ? styles.apb : null]}>{consigneeName}</Text>
         {to ? <Text style={styles.consigneeTo}>To: {to}</Text> : null}
       </LoadCell>
-      <LoadCell flex={COL.goods} left>
+      <LoadCell width={COL.goods}>
         <Text style={styles.loadText}>{row.goodsName}</Text>
       </LoadCell>
-      <LoadCell flex={COL.weight}>
+      <LoadCell width={COL.weight}>
         <Text style={styles.loadText}>{formatBillPreviewWeight(row.weightOrQuantity)}</Text>
       </LoadCell>
-      <LoadCell flex={COL.num}>
+      <LoadCell width={COL.rate}>
         <Text style={styles.loadText}>
           {formatBillPreviewAmount(row.ratePerUnit)}
           {row.unitName?.trim() ? (
@@ -123,16 +130,16 @@ function LoadRow({ row }: { row: BillPreviewLoadLine }) {
           ) : null}
         </Text>
       </LoadCell>
-      <LoadCell flex={COL.num}>
+      <LoadCell width={COL.num}>
         <Text style={styles.loadText}>{formatBillPreviewAmount(row.freight)}</Text>
       </LoadCell>
-      <LoadCell flex={COL.num}>
+      <LoadCell width={COL.num}>
         <Text style={styles.loadText}>{formatBillPreviewAmount(row.advance)}</Text>
       </LoadCell>
-      <LoadCell flex={COL.num}>
+      <LoadCell width={COL.num}>
         <Text style={styles.loadText}>{formatBillPreviewAmount(row.topay)}</Text>
       </LoadCell>
-      <LoadCell flex={COL.num} last>
+      <LoadCell width={COL.num} last>
         <Text style={styles.loadText}>{formatBillPreviewAmount(row.balance)}</Text>
       </LoadCell>
     </View>
@@ -176,9 +183,15 @@ export function BillMemoTemplate({ data }: BillMemoTemplateProps) {
         {/* Top strip */}
         <View style={styles.top}>
           <Text style={styles.motto}>{company.motto}</Text>
-          <View style={styles.banner}>
-            <Text style={styles.bannerText}>{company.titleTop}</Text>
-            <Text style={styles.bannerText}>{company.titleBottom}</Text>
+          <View style={styles.bannerWrap}>
+            <View style={styles.bannerFill}>
+              <View style={styles.bannerCutLeft} />
+              <View style={styles.bannerCutRight} />
+            </View>
+            <View style={styles.bannerCopy}>
+              <Text style={styles.bannerText}>{company.titleTop}</Text>
+              <Text style={styles.bannerText}>{company.titleBottom}</Text>
+            </View>
           </View>
           <Text style={styles.phone}>{company.phone}</Text>
         </View>
@@ -260,69 +273,66 @@ export function BillMemoTemplate({ data }: BillMemoTemplateProps) {
         {/* Loads */}
         <View style={styles.loadsSection}>
           <View style={styles.loadsHead}>
-            <LoadCell flex={COL.sno}>
+            <LoadCell width={COL.sno}>
               <Text style={styles.headText}>S. No.</Text>
             </LoadCell>
-            <LoadCell flex={COL.consignor}>
+            <LoadCell width={COL.consignor}>
               <Text style={styles.headText}>Consignor</Text>
             </LoadCell>
-            <LoadCell flex={COL.consignee}>
+            <LoadCell width={COL.consignee}>
               <Text style={styles.headText}>Consignee</Text>
             </LoadCell>
-            <LoadCell flex={COL.goods}>
+            <LoadCell width={COL.goods}>
               <Text style={styles.headText}>Goods</Text>
             </LoadCell>
-            <LoadCell flex={COL.weight}>
+            <LoadCell width={COL.weight}>
               <Text style={styles.headText}>Weight / Qty</Text>
             </LoadCell>
-            <LoadCell flex={COL.num}>
+            <LoadCell width={COL.rate}>
               <Text style={styles.headText}>Rate / Unit</Text>
             </LoadCell>
-            <LoadCell flex={COL.num}>
+            <LoadCell width={COL.num}>
               <Text style={styles.headText}>Freight</Text>
             </LoadCell>
-            <LoadCell flex={COL.num}>
+            <LoadCell width={COL.num}>
               <Text style={styles.headText}>Advance</Text>
             </LoadCell>
-            <LoadCell flex={COL.num}>
+            <LoadCell width={COL.num}>
               <Text style={styles.headText}>To Pay</Text>
             </LoadCell>
-            <LoadCell flex={COL.num} last>
+            <LoadCell width={COL.num} last>
               <Text style={styles.headText}>Balance</Text>
             </LoadCell>
           </View>
 
           <View style={styles.loadsBody}>
-            {loadRows.map((row) => (
-              <LoadRow key={row.loadNumber} row={row} />
+            {loadRows.map((row, index) => (
+              <LoadRow
+                key={row.loadNumber}
+                row={row}
+                last={index === loadRows.length - 1}
+              />
             ))}
           </View>
 
-          {/* Footer: Truck Loan | Total Freight */}
           <View style={styles.loadsFoot}>
-            <View style={[styles.footCell, { flex: COL.sno }]} />
-            <View
-              style={[
-                styles.footCell,
-                styles.footInline,
-                { flex: COL.consignor + COL.consignee + COL.goods + COL.weight },
-              ]}>
-              <Text style={styles.footLabel}>Truck Loan</Text>
-              <Text style={styles.footValue}>
+            <View style={[styles.footCell, styles.footInline, { width: FOOT.truckLoan }]}>
+              <Text style={styles.footLabel} numberOfLines={1}>
+                Truck Loan
+              </Text>
+              <Text style={styles.footValue} numberOfLines={1}>
                 {data.truckLoan ? formatBillPreviewAmount(data.total) : ''}
               </Text>
             </View>
-            <View style={[styles.footCell, { flex: COL.num }]} />
-            <View
-              style={[
-                styles.footCell,
-                styles.footInline,
-                { flex: COL.num * 3 },
-              ]}>
-              <Text style={styles.footLabel}>Total Freight</Text>
-              <Text style={styles.footValue}>{formatBillPreviewAmount(data.totalFreight)}</Text>
+            <View style={[styles.footCell, styles.footInline, { width: FOOT.totalFreight }]}>
+              <Text style={styles.footLabel} numberOfLines={1}>
+                Total Freight
+              </Text>
+              <Text style={styles.footValue} numberOfLines={1}>
+                {formatBillPreviewAmount(data.totalFreight)}
+              </Text>
             </View>
-            <View style={[styles.footCell, styles.footCellLast, { flex: COL.num }]} />
+            <View style={[styles.footCell, styles.footCellLast, { width: FOOT.empty }]} />
           </View>
         </View>
 
@@ -344,7 +354,9 @@ export function BillMemoTemplate({ data }: BillMemoTemplateProps) {
               <View style={styles.payTable}>
                 <View style={styles.payHeadRow}>
                   <View style={[styles.payCell, styles.payCorner]}>
-                    <Text style={styles.semibold}>Payment</Text>
+                    <Text style={styles.semibold} numberOfLines={1}>
+                      Payment
+                    </Text>
                   </View>
                   {BILL_MEMO_PAY_BY_OPTIONS.map((option, i) => (
                     <View
@@ -418,12 +430,14 @@ export function BillMemoTemplate({ data }: BillMemoTemplateProps) {
           </View>
         </View>
 
-        {/* Signatures */}
+        {/* Signatures — truck owner / driver line hidden for now */}
         <View style={styles.signatures}>
+          {/*
           <View style={styles.signatureBlock}>
             <View style={styles.signatureSpace} />
             <Text style={styles.signatureLabel}>Truck Owner&apos;s &amp; Driver&apos;s Signature</Text>
           </View>
+          */}
           <View style={[styles.signatureBlock, styles.signatureBlockRight]}>
             <View style={[styles.signatureSpace, styles.signatureSpaceRight]} />
             <Text style={styles.signatureLabel}>{company.signatureLabel}</Text>
@@ -469,12 +483,39 @@ const styles = StyleSheet.create({
     color: INK,
     letterSpacing: 0.5,
   },
-  banner: {
-    backgroundColor: BLUE,
-    paddingVertical: 6,
-    paddingHorizontal: 28,
+  bannerWrap: {
+    width: 210,
+    height: 44,
     alignItems: 'center',
-    minWidth: 188,
+    justifyContent: 'center',
+  },
+  bannerFill: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: BLUE,
+    overflow: 'hidden',
+  },
+  bannerCutLeft: {
+    position: 'absolute',
+    left: -18,
+    bottom: -22,
+    width: 48,
+    height: 48,
+    backgroundColor: '#fff',
+    transform: [{ rotate: '28deg' }],
+  },
+  bannerCutRight: {
+    position: 'absolute',
+    right: -18,
+    bottom: -22,
+    width: 48,
+    height: 48,
+    backgroundColor: '#fff',
+    transform: [{ rotate: '-28deg' }],
+  },
+  bannerCopy: {
+    zIndex: 1,
+    alignItems: 'center',
+    paddingHorizontal: 22,
   },
   bannerText: {
     color: '#fff',
@@ -607,7 +648,7 @@ const styles = StyleSheet.create({
     borderBottomColor: INK,
   },
   headText: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '600',
     color: INK,
     textAlign: 'center',
@@ -615,15 +656,22 @@ const styles = StyleSheet.create({
   loadsBody: {},
   loadRow: {
     flexDirection: 'row',
-    minHeight: 52,
+    minHeight: 44,
     borderBottomWidth: 1,
     borderBottomColor: INK,
   },
+  loadRowLast: {
+    borderBottomWidth: 0,
+  },
   loadCell: {
+    flexGrow: 0,
+    flexShrink: 0,
+    minWidth: 0,
     paddingVertical: 6,
-    paddingHorizontal: 4,
+    paddingHorizontal: 2,
     alignItems: 'center',
     justifyContent: 'flex-start',
+    overflow: 'hidden',
   },
   cellBorderRight: {
     borderRightWidth: 1,
@@ -666,12 +714,16 @@ const styles = StyleSheet.create({
     borderTopColor: INK,
   },
   footCell: {
+    flexGrow: 0,
+    flexShrink: 0,
+    minWidth: 0,
     minHeight: 34,
     paddingVertical: 6,
     paddingHorizontal: 8,
     borderRightWidth: 1,
     borderRightColor: INK,
     justifyContent: 'center',
+    overflow: 'hidden',
   },
   footCellLast: {
     borderRightWidth: 0,
@@ -680,6 +732,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    gap: 8,
   },
   footLabel: {
     fontSize: 11,
@@ -687,11 +740,11 @@ const styles = StyleSheet.create({
     color: INK,
   },
   footValue: {
-    flex: 1,
+    flexShrink: 1,
     fontSize: 11,
     fontWeight: '700',
     color: INK,
-    textAlign: 'center',
+    textAlign: 'right',
   },
 
   // Footer grid
@@ -766,7 +819,7 @@ const styles = StyleSheet.create({
   },
   payCorner: {
     flex: 0,
-    width: 60,
+    width: 88,
     alignItems: 'flex-start',
   },
   payCheck: {
