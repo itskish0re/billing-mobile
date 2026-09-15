@@ -25,11 +25,6 @@ export default function AppTabs() {
           selected: { color: colors.text },
         }}>
         <NativeTabs.Trigger name="index">
-          <NativeTabs.Trigger.Icon sf="house.fill" md="home" />
-          <NativeTabs.Trigger.Label>Home</NativeTabs.Trigger.Label>
-        </NativeTabs.Trigger>
-
-        <NativeTabs.Trigger name="transactions">
           <NativeTabs.Trigger.Icon sf="list.bullet.rectangle" md="receipt_long" />
           <NativeTabs.Trigger.Label>Transactions</NativeTabs.Trigger.Label>
         </NativeTabs.Trigger>

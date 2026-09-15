@@ -63,6 +63,33 @@ export type Database = {
         };
         Relationships: [];
       };
+      user_filters: {
+        Row: {
+          user_filter_id: number;
+          user_id: string;
+          entity: string;
+          filter_query: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          user_filter_id?: number;
+          user_id: string;
+          entity: string;
+          filter_query?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          user_filter_id?: number;
+          user_id?: string;
+          entity?: string;
+          filter_query?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {

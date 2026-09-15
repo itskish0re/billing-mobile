@@ -25,6 +25,8 @@ Migrations in `supabase/migrations/` (applied to Billing Dev):
 | `20260705110400` | Triggers, `heartbeat()`, `suggest_next_bill_number()`, RLS helpers |
 | `20260705110500` | Views `v_bills`, `v_loads` |
 | `20260705110600` | RLS policies |
+| `20260905010000` | `save_bill` RPC |
+| `20260916010000` | `user_filters` (per-user saved list queries; applied on Billing Dev) |
 
 Seed data (`seed.sql`):
 
@@ -164,7 +166,7 @@ Use **`apikey` header only** — do not send publishable keys as `Authorization:
 ## Tables
 
 ```
-app_role, profiles
+app_role, profiles, user_filters
 financial_year, name_board, truck, location, party, goods, unit
 bills, loads
 v_bills, v_loads (views)

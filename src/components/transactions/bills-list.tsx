@@ -1,10 +1,8 @@
 import type { BillListRow } from '@/types/bill-list';
 
 export type BillsListProps = {
-  searchQuery: string;
-  startDate: Date | null;
-  endDate: Date | null;
-  isDateRangeValid: boolean;
+  filterQuery: string;
+  filtersReady: boolean;
   onEdit: (row: BillListRow) => void;
   onPreview: (row: BillListRow) => void;
 };

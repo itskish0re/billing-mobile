@@ -4,11 +4,13 @@ import {
   Icon,
   LazyColumn,
   OutlinedCard,
+  PullToRefreshBox,
   Row,
   Text,
   useMaterialColors,
 } from '@expo/ui/jetpack-compose';
 import {
+  align,
   clickable,
   clip,
   fillMaxSize,
@@ -17,7 +19,7 @@ import {
   Shapes,
   weight,
 } from '@expo/ui/jetpack-compose/modifiers';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 
 import { mapBillListRowToPreview } from '@/lib/bills/bill-preview';
 import { formatTruckNumber } from '@/lib/bills/format-truck-number';
@@ -31,10 +33,8 @@ const PREVIEW_ICON = require('@/assets/icons/visibility.xml');
 const SHARE_ICON = require('@/assets/icons/share.xml');
 
 export type BillsListProps = {
-  searchQuery: string;
-  startDate: Date | null;
-  endDate: Date | null;
-  isDateRangeValid: boolean;
+  filterQuery: string;
+  filtersReady: boolean;
   onEdit: (row: BillListRow) => void;
   onPreview: (row: BillListRow) => void;
 };
@@ -156,25 +156,31 @@ function BillListCard({
 }
 
 /**
- * Bills tab list. Fetches the active financial year's bills within the date
- * range, filters by the search query client-side (mirroring masters), and
- * renders an edit + preview action per bill.
+ * Bills tab list. Fetches the active financial year's bills using the saved
+ * filter query (`bill_date` bounds plus optional field filters).
  */
 export function BillsList({
-  searchQuery,
-  startDate,
-  endDate,
-  isDateRangeValid,
+  filterQuery,
+  filtersReady,
   onEdit,
   onPreview,
 }: BillsListProps) {
   const { showSnackbar } = useSnackbar();
   const [sharingBillId, setSharingBillId] = useState<number | null>(null);
-  const { data = [], isLoading, isError, error } = useBillsList({
-    startDate,
-    endDate,
-    enabled: isDateRangeValid,
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const { data = [], isLoading, isError, error, refetch, isRefetching } = useBillsList({
+    filterQuery,
+    enabled: filtersReady,
   });
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await refetch();
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   const handleShare = async (row: BillListRow) => {
     if (sharingBillId != null) {
@@ -194,58 +200,16 @@ export function BillsList({
     }
   };
 
-  const filtered = useMemo(() => {
-    const query = searchQuery.trim().toLowerCase();
-    if (!query) {
-      return data;
-    }
-    return data.filter((row) => {
-      const haystack = [
-        row.billNumber,
-        row.truckNumber,
-        formatTruckNumber(row.truckNumber),
-        row.nameBoardName,
-        row.fromLocationName,
-        row.driverName,
-        row.loads[0]?.toLocationName,
-      ]
-        .filter(Boolean)
-        .join(' ')
-        .toLowerCase();
-      return haystack.includes(query);
-    });
-  }, [data, searchQuery]);
-
-  if (!isDateRangeValid) {
-    return <CenteredMessage text="Fix the date range to see bills." />;
-  }
-
-  if (isLoading) {
+  if (!filtersReady || isLoading) {
     return <CenteredMessage text="Loading bills…" />;
   }
 
-  if (isError) {
-    return (
-      <CenteredMessage
-        text={error instanceof Error ? error.message : 'Could not load bills.'}
-      />
-    );
-  }
-
-  if (filtered.length === 0) {
-    return (
-      <CenteredMessage
-        text={searchQuery ? `No bills match "${searchQuery}"` : 'No bills for this period.'}
-      />
-    );
-  }
-
-  return (
+  let body = (
     <LazyColumn
       modifiers={[fillMaxWidth(), fillMaxSize(), weight(1)]}
       contentPadding={{ start: 16, top: 8, end: 16, bottom: 88 }}
       verticalArrangement={{ spacedBy: 8 }}>
-      {filtered.map((row) => (
+      {data.map((row) => (
         <BillListCard
           key={row.billId}
           row={row}
@@ -258,5 +222,31 @@ export function BillsList({
         />
       ))}
     </LazyColumn>
+  );
+
+  if (isError) {
+    body = (
+      <CenteredMessage
+        text={error instanceof Error ? error.message : 'Could not load bills.'}
+      />
+    );
+  } else if (data.length === 0) {
+    body = (
+      <CenteredMessage
+        text={filterQuery ? 'No bills match these filters.' : 'No bills for this period.'}
+      />
+    );
+  }
+
+  return (
+    <PullToRefreshBox
+      isRefreshing={isRefreshing || isRefetching}
+      onRefresh={() => {
+        void handleRefresh();
+      }}
+      indicator={{ modifiers: [align('topCenter')] }}
+      modifiers={[fillMaxWidth(), fillMaxSize(), weight(1)]}>
+      {body}
+    </PullToRefreshBox>
   );
 }

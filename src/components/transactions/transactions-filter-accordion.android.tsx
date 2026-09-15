@@ -5,21 +5,20 @@ import { type ReactNode } from 'react';
 import { FilterAccordion } from '@/components/ui/filter-accordion';
 
 type TransactionsFilterAccordionProps = {
-  onSearchQueryChange: (query: string) => void;
   children: ReactNode;
+  extra?: ReactNode;
 };
 
 export function TransactionsFilterAccordion({
-  onSearchQueryChange,
   children,
+  extra,
 }: TransactionsFilterAccordionProps) {
   return (
-    <FilterAccordion
-      searchPlaceholder="Search bills and loads"
-      onSearchQueryChange={onSearchQueryChange}>
+    <FilterAccordion>
       <Row modifiers={[fillMaxWidth()]} horizontalArrangement={{ spacedBy: 12 }} verticalAlignment="top">
         {children}
       </Row>
+      {extra}
     </FilterAccordion>
   );
 }

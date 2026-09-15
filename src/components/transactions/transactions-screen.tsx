@@ -3,8 +3,11 @@ import { StyleSheet, View } from 'react-native';
 
 import { TransactionsDateFilterField } from '@/components/transactions/transactions-date-filter-field';
 import { TransactionsFilterAccordion } from '@/components/transactions/transactions-filter-accordion';
+import { EntityQueryFilter } from '@/components/ui/entity-query-filter';
 import { AppTabRow, type AppTabItem } from '@/components/ui/tab-row';
 import { useTransactionsFilters, type TransactionsTab } from '@/hooks/use-transactions-filters';
+import { useUserEntityFilter } from '@/hooks/use-user-entity-filter';
+import { useSnackbar } from '@/providers/snackbar-provider';
 
 const TRANSACTION_TABS: AppTabItem<TransactionsTab>[] = [
   { id: 'bills', label: 'Bills' },
@@ -12,19 +15,23 @@ const TRANSACTION_TABS: AppTabItem<TransactionsTab>[] = [
 ];
 
 export function TransactionsScreen() {
+  const { showSnackbar } = useSnackbar();
+  const { activeTab, setActiveTab } = useTransactionsFilters();
   const {
+    fields,
+    clauses,
+    setClauses,
     startDate,
     endDate,
-    activeTab,
-    searchQuery,
-    clearEndDate,
-    clearStartDate,
-    fieldErrors,
-    setEndDate,
     setStartDate,
-    setSearchQuery,
-    setActiveTab,
-  } = useTransactionsFilters();
+    setEndDate,
+    clearStartDate,
+    clearEndDate,
+    fieldErrors,
+    isReady: filtersReady,
+    isSaving: isFilterSaving,
+    save: saveFilters,
+  } = useUserEntityFilter('bill');
 
   const selectedIndex = activeTab === 'bills' ? 0 : 1;
 
@@ -36,7 +43,27 @@ export function TransactionsScreen() {
         onTabSelected={(_index, tab) => setActiveTab(tab.id)}
       />
 
-      <TransactionsFilterAccordion onSearchQueryChange={setSearchQuery}>
+      <TransactionsFilterAccordion
+        extra={
+          activeTab === 'bills' && filtersReady ? (
+            <EntityQueryFilter
+              fields={fields}
+              value={clauses}
+              onChange={setClauses}
+              isSaving={isFilterSaving}
+              onSave={() => {
+                void saveFilters()
+                  .then(() => showSnackbar('Filters saved', { variant: 'success' }))
+                  .catch((err) => {
+                    void showSnackbar(
+                      err instanceof Error ? err.message : 'Could not save filters.',
+                      { variant: 'error' }
+                    );
+                  });
+              }}
+            />
+          ) : null
+        }>
         <TransactionsDateFilterField
           label="Start date"
           date={startDate}
@@ -54,13 +81,7 @@ export function TransactionsScreen() {
       </TransactionsFilterAccordion>
 
       <Text textStyle={styles.placeholder}>
-        {activeTab === 'bills'
-          ? searchQuery
-            ? `No bills match "${searchQuery}"`
-            : 'Bills will appear here'
-          : searchQuery
-            ? `No loads match "${searchQuery}"`
-            : 'Loads will appear here'}
+        {activeTab === 'bills' ? 'Bills will appear here' : 'Loads will appear here'}
       </Text>
     </View>
   );

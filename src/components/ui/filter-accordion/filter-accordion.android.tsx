@@ -1,6 +1,5 @@
 import {
   Column,
-  DockedSearchBar,
   HorizontalDivider,
   Icon,
   Row,
@@ -21,12 +20,9 @@ import {
 } from '@expo/ui/jetpack-compose/modifiers';
 import { type ReactNode, useState } from 'react';
 
-const SEARCH_ICON = require('@/assets/icons/search.xml');
 const CHEVRON_ICON = require('@/assets/icons/keyboard_arrow_down.xml');
 
 export type FilterAccordionProps = {
-  searchPlaceholder: string;
-  onSearchQueryChange: (query: string) => void;
   children?: ReactNode;
 };
 
@@ -34,11 +30,7 @@ export type FilterAccordionProps = {
  * Filter accordion. Children stay mounted when collapsed so OutlinedTextField /
  * useNativeState SharedObjects are not released (AnimatedVisibility would).
  */
-export function FilterAccordion({
-  searchPlaceholder,
-  onSearchQueryChange,
-  children,
-}: FilterAccordionProps) {
+export function FilterAccordion({ children }: FilterAccordionProps) {
   const colors = useMaterialColors();
   const [isOpen, setIsOpen] = useState(false);
 
@@ -68,15 +60,6 @@ export function FilterAccordion({
         ]}
         verticalArrangement={{ spacedBy: 12 }}>
         {children}
-
-        <DockedSearchBar onQueryChange={onSearchQueryChange} modifiers={[fillMaxWidth()]}>
-          <DockedSearchBar.Placeholder>
-            <Text color={colors.onSurfaceVariant}>{searchPlaceholder}</Text>
-          </DockedSearchBar.Placeholder>
-          <DockedSearchBar.LeadingIcon>
-            <Icon source={SEARCH_ICON} size={20} tint={colors.onSurfaceVariant} />
-          </DockedSearchBar.LeadingIcon>
-        </DockedSearchBar>
       </Column>
 
       <HorizontalDivider thickness={1} color={colors.outlineVariant} />

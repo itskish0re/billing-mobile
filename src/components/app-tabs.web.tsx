@@ -15,9 +15,6 @@ export default function AppTabs() {
       <TabSlot style={{ height: '100%' }} />
       <TabList style={[styles.tabList, { borderTopColor: chrome.divider }]}>
         <TabTrigger name="index" href="/" asChild>
-          <TabButton>Home</TabButton>
-        </TabTrigger>
-        <TabTrigger name="transactions" href="/transactions" asChild>
           <TabButton>Transactions</TabButton>
         </TabTrigger>
         <TabTrigger name="masters" href="/masters" asChild>

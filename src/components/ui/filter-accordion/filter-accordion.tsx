@@ -1,27 +1,19 @@
-import { Collapsible, TextInput } from '@expo/ui';
 import { type ReactNode, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
+import { Collapsible } from '@expo/ui';
+
 export type FilterAccordionProps = {
-  searchPlaceholder: string;
-  onSearchQueryChange: (query: string) => void;
   children?: ReactNode;
 };
 
-export function FilterAccordion({
-  searchPlaceholder,
-  onSearchQueryChange,
-  children,
-}: FilterAccordionProps) {
+export function FilterAccordion({ children }: FilterAccordionProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
     <View style={styles.container}>
       <Collapsible isOpen={isOpen} onOpenChange={setIsOpen} label="Filter">
-        <View style={styles.content}>
-          {children}
-          <TextInput placeholder={searchPlaceholder} onChangeText={onSearchQueryChange} />
-        </View>
+        <View style={styles.content}>{children}</View>
       </Collapsible>
       <View style={styles.border} />
     </View>

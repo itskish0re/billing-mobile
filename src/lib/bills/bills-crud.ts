@@ -1,4 +1,6 @@
 import { recalculateBillForm, toFormNumber } from '@/lib/bills/bill-form';
+import { BILL_FILTER_FIELDS } from '@/lib/filters/bill-filter-fields';
+import { applyFieldFilters } from '@/lib/filters/filter-query';
 import { supabase } from '@/lib/supabase';
 import type { BillFormValues, BillLoadFormLine } from '@/types/bill-form';
 import type { BillListLoad, BillListRow } from '@/types/bill-list';
@@ -8,10 +10,13 @@ const db = supabase as any;
 
 export type FetchBillListParams = {
   financialYearId: number;
-  /** Inclusive ISO date (yyyy-mm-dd) lower bound on bill_date. */
-  startDate?: string | null;
-  /** Inclusive ISO date (yyyy-mm-dd) upper bound on bill_date. */
-  endDate?: string | null;
+  /**
+   * URL-encoded filters, e.g.
+   * `bill_date_gte=2026-09-01&bill_date_lte=2026-09-16&bill_number=5`.
+   * Date params both apply to `v_bills.bill_date`; omit `bill_date_lte` when
+   * the end date is empty.
+   */
+  filterQuery?: string | null;
 };
 
 function toNumberOrNull(value: unknown): number | null {
@@ -61,15 +66,15 @@ function mapLoadRow(row: Record<string, unknown>): BillListLoad {
 }
 
 /**
- * Fetches bills for the active financial year (optionally within a date range),
- * enriched with each bill's loads and its raw `others` charges. Loads and named
- * charges power the preview memo and the edit form; the list card itself only
- * needs the header fields plus the first load's destination.
+ * Fetches bills for the active financial year using the saved filter query
+ * (`bill_date` bounds plus optional field filters), enriched with each bill's
+ * loads and its raw `others` charges. Loads and named charges power the
+ * preview memo and the edit form; the list card itself only needs the header
+ * fields plus the first load's destination.
  */
 export async function fetchBillList({
   financialYearId,
-  startDate,
-  endDate,
+  filterQuery,
 }: FetchBillListParams): Promise<BillListRow[]> {
   let billsQuery = db
     .from('v_bills')
@@ -78,11 +83,8 @@ export async function fetchBillList({
     .order('bill_date', { ascending: false })
     .order('bill_id', { ascending: false });
 
-  if (startDate) {
-    billsQuery = billsQuery.gte('bill_date', startDate);
-  }
-  if (endDate) {
-    billsQuery = billsQuery.lte('bill_date', endDate);
+  if (filterQuery) {
+    billsQuery = applyFieldFilters(billsQuery, filterQuery, BILL_FILTER_FIELDS);
   }
 
   const { data: billRows, error: billsError } = await billsQuery;
