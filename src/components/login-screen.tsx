@@ -3,11 +3,13 @@ import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { APP_NAME, BRAND_SEED_COLOR, TabChrome } from '@/constants/brand';
 import { useLoginForm } from '@/hooks/use-login-form';
-
-import { BRAND_SEED_COLOR } from '@/constants/brand';
+import { useResolvedColorScheme } from '@/hooks/use-resolved-color-scheme';
 
 export function LoginScreen() {
+  const scheme = useResolvedColorScheme();
+  const chrome = TabChrome[scheme];
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const {
     email,
@@ -20,15 +22,24 @@ export function LoginScreen() {
   } = useLoginForm();
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <Host style={styles.host} seedColor={BRAND_SEED_COLOR}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: chrome.contentBackground }]}>
+      <Host key={scheme} style={styles.host} seedColor={BRAND_SEED_COLOR} colorScheme={scheme}>
         <Column spacing={20} style={styles.column}>
           <Column spacing={6}>
-            <Text textStyle={styles.brandTitle}>Billing</Text>
-            <Text textStyle={styles.brandSubtitle}>Sign in with your admin-created account</Text>
+            <Text textStyle={styles.brandTitle}>{APP_NAME}</Text>
+            <Text textStyle={{ ...styles.brandSubtitle, color: chrome.onHeaderMuted }}>
+              Sign in with your admin-created account
+            </Text>
           </Column>
 
-          <View style={styles.card}>
+          <View
+            style={[
+              styles.card,
+              {
+                backgroundColor: chrome.headerBackground,
+                borderColor: chrome.divider,
+              },
+            ]}>
             <Column spacing={14}>
               <Column spacing={4}>
                 <TextInput

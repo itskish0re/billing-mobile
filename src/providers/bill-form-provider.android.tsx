@@ -25,8 +25,8 @@ import {
 } from 'react-native-safe-area-context';
 
 import { BillFormPanel } from '@/components/bill-form/bill-form-panel';
-import { BRAND_SEED_COLOR, TabChrome, resolveColorScheme } from '@/constants/brand';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { BRAND_SEED_COLOR, TabChrome } from '@/constants/brand';
+import { useResolvedColorScheme } from '@/hooks/use-resolved-color-scheme';
 import { SnackbarHost } from '@/providers/snackbar-provider';
 import type { BillFormValues } from '@/types/bill-form';
 
@@ -71,8 +71,7 @@ export function BillFormProvider({ children }: { children: ReactNode }) {
   const [editValues, setEditValues] = useState<BillFormValues | null>(null);
   const exitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const insets = useSafeAreaInsets();
-  const colorScheme = useColorScheme();
-  const scheme = resolveColorScheme(colorScheme);
+  const scheme = useResolvedColorScheme();
   const chrome = TabChrome[scheme];
 
   const clearExitTimer = useCallback(() => {

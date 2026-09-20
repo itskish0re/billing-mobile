@@ -177,7 +177,7 @@ private fun MasterItemCard(
   OutlinedCard(
     modifier = Modifier.fillMaxWidth(),
     colors = CardDefaults.outlinedCardColors(
-      containerColor = MaterialTheme.colorScheme.surface
+      containerColor = MaterialTheme.colorScheme.surfaceContainer
     )
   ) {
     Row(

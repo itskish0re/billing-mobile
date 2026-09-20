@@ -3,22 +3,20 @@ import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import * as SystemUI from 'expo-system-ui';
 import { useEffect } from 'react';
-import { useColorScheme } from 'react-native';
-
 import AppTabs from '@/components/app-tabs';
 import { LoginScreen } from '@/components/login-screen';
 import { OfflineGate } from '@/components/offline-gate';
 import { TabChrome } from '@/constants/brand';
 import { Colors } from '@/constants/theme';
 import { useNetworkStatus } from '@/hooks/use-network-status';
+import { useResolvedColorScheme } from '@/hooks/use-resolved-color-scheme';
 import { AppProviders } from '@/providers/app-providers';
 import { useAuth } from '@/providers/auth-provider';
 
 SplashScreen.preventAutoHideAsync();
 
 function RootNavigator() {
-  const colorScheme = useColorScheme();
-  const scheme = colorScheme === 'unspecified' ? 'light' : colorScheme;
+  const scheme = useResolvedColorScheme();
   const colors = Colors[scheme];
   const navigationTheme = scheme === 'dark' ? DarkTheme : DefaultTheme;
   const { isChecking, isOffline } = useNetworkStatus();

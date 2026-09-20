@@ -2,15 +2,15 @@ import { Text } from '@expo/ui';
 import * as SystemUI from 'expo-system-ui';
 import { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { useColorScheme } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { resolveColorScheme, TabChrome } from '@/constants/brand';
+import { APP_NAME, TabChrome } from '@/constants/brand';
+import { useResolvedColorScheme } from '@/hooks/use-resolved-color-scheme';
 import { useAppStore } from '@/stores/app-store';
 
 export function TabHeader() {
   const insets = useSafeAreaInsets();
-  const scheme = resolveColorScheme(useColorScheme());
+  const scheme = useResolvedColorScheme();
   const chrome = TabChrome[scheme];
   const financialYearLabel = useAppStore((state) => state.activeFinancialYearLabel);
 
@@ -20,7 +20,7 @@ export function TabHeader() {
 
   return (
     <View style={[styles.header, { backgroundColor: chrome.headerBackground, paddingTop: insets.top + 12 }]}>
-      <Text textStyle={{ ...styles.title, color: chrome.onHeader }}>Billing</Text>
+      <Text textStyle={{ ...styles.title, color: chrome.onHeader }}>{APP_NAME}</Text>
       <Text textStyle={{ ...styles.subtitle, color: chrome.onHeaderMuted }}>
         {financialYearLabel ?? 'No financial year selected'}
       </Text>

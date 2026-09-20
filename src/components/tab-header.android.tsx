@@ -4,6 +4,7 @@ import * as SystemUI from 'expo-system-ui';
 import { useEffect } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { APP_NAME } from '@/constants/brand';
 import { useAppStore } from '@/stores/app-store';
 
 export function TabHeader() {
@@ -22,7 +23,7 @@ export function TabHeader() {
     <Column modifiers={[fillMaxWidth(), background(headerColor)]}>
       <Column modifiers={[fillMaxWidth(), padding(16, insets.top + 12, 16, 8)]}>
         <Text color={titleColor} style={{ typography: 'headlineMedium' }}>
-          Billing
+          {APP_NAME}
         </Text>
         <Text color={titleColor} style={{ typography: 'bodyMedium' }}>
           {subtitle}

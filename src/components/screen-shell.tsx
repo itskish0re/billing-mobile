@@ -1,10 +1,10 @@
 import type { ReactNode } from 'react';
 import { Host, Column } from '@expo/ui';
 import { StyleSheet, View } from 'react-native';
-import { useColorScheme } from 'react-native';
 
 import { TabHeader } from '@/components/tab-header';
-import { BRAND_SEED_COLOR, resolveColorScheme, TabChrome } from '@/constants/brand';
+import { BRAND_SEED_COLOR, TabChrome } from '@/constants/brand';
+import { useResolvedColorScheme } from '@/hooks/use-resolved-color-scheme';
 
 export type ScreenShellProps = {
   children?: ReactNode;
@@ -17,11 +17,12 @@ export function ScreenShell({
   horizontalPadding = 16,
   topPadding = 16,
 }: ScreenShellProps) {
-  const chrome = TabChrome[resolveColorScheme(useColorScheme())];
+  const scheme = useResolvedColorScheme();
+  const chrome = TabChrome[scheme];
 
   return (
     <View style={[styles.root, { backgroundColor: chrome.contentBackground }]}>
-      <Host style={styles.host} seedColor={BRAND_SEED_COLOR}>
+      <Host style={styles.host} seedColor={BRAND_SEED_COLOR} colorScheme={scheme}>
         <View style={styles.column}>
           <TabHeader />
           <Column

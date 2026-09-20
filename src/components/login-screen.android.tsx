@@ -19,8 +19,9 @@ import { useState } from 'react';
 import { StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { APP_NAME, BRAND_SEED_COLOR, TabChrome } from '@/constants/brand';
 import { useLoginForm } from '@/hooks/use-login-form.android';
-import { BRAND_SEED_COLOR } from '@/constants/brand';
+import { useResolvedColorScheme } from '@/hooks/use-resolved-color-scheme';
 const VISIBILITY_ICON = require('@/assets/icons/visibility.xml');
 const VISIBILITY_OFF_ICON = require('@/assets/icons/visibility_off.xml');
 
@@ -28,9 +29,12 @@ const SCREEN_PADDING = 12;
 const CARD_PADDING = 20;
 
 export function LoginScreen() {
+  const scheme = useResolvedColorScheme();
+  const chrome = TabChrome[scheme];
+
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <Host style={styles.host} seedColor={BRAND_SEED_COLOR}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: chrome.contentBackground }]}>
+      <Host key={scheme} style={styles.host} seedColor={BRAND_SEED_COLOR} colorScheme={scheme}>
         <LoginScreenContent />
       </Host>
     </SafeAreaView>
@@ -62,7 +66,7 @@ function LoginScreenContent() {
           horizontalAlignment="center">
           <Column horizontalAlignment="center" verticalArrangement={{ spacedBy: 6 }}>
             <Text color={colors.primary} style={{ typography: 'displaySmall' }}>
-              Billing
+              {APP_NAME}
             </Text>
             <Text color={colors.onSurfaceVariant} style={{ typography: 'bodyMedium' }}>
               Sign in with your admin-created account

@@ -1,14 +1,15 @@
 import type { Href } from 'expo-router';
 import { Tabs, TabList, TabTrigger, TabSlot, TabTriggerSlotProps } from 'expo-router/ui';
-import { Pressable, StyleSheet, useColorScheme } from 'react-native';
+import { Pressable, StyleSheet } from 'react-native';
 
-import { resolveColorScheme, TabChrome } from '@/constants/brand';
+import { TabChrome } from '@/constants/brand';
+import { useResolvedColorScheme } from '@/hooks/use-resolved-color-scheme';
 
 import { ThemedText } from './themed-text';
 import { ThemedView } from './themed-view';
 
 export default function AppTabs() {
-  const chrome = TabChrome[resolveColorScheme(useColorScheme())];
+  const chrome = TabChrome[useResolvedColorScheme()];
 
   return (
     <Tabs>

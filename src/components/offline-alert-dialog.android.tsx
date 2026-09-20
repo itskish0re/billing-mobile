@@ -8,14 +8,19 @@ import {
 import { StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { BRAND_SEED_COLOR, TabChrome } from '@/constants/brand';
+import { useResolvedColorScheme } from '@/hooks/use-resolved-color-scheme';
 import { exitApp } from '@/lib/exit-app';
 
 const WIFI_OFF_ICON = require('@/assets/icons/wifi_off.xml');
 
 export function OfflineAlertDialog() {
+  const scheme = useResolvedColorScheme();
+  const chrome = TabChrome[scheme];
+
   return (
-    <SafeAreaView style={styles.container}>
-      <Host style={styles.host}>
+    <SafeAreaView style={[styles.container, { backgroundColor: chrome.contentBackground }]}>
+      <Host key={scheme} style={styles.host} seedColor={BRAND_SEED_COLOR} colorScheme={scheme}>
         <AlertDialog
           onDismissRequest={exitApp}
           properties={{

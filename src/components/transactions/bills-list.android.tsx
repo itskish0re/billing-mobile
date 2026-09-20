@@ -107,7 +107,7 @@ function BillListCard({
   return (
     <OutlinedCard
       modifiers={[fillMaxWidth()]}
-      colors={{ containerColor: colors.surface }}
+      colors={{ containerColor: colors.surfaceContainer }}
       border={{ color: colors.outlineVariant, width: 1 }}>
       <Box modifiers={[fillMaxWidth()]}>
         <Column

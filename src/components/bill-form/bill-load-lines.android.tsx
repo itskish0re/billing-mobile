@@ -336,6 +336,7 @@ export function BillLoadLines({ loads, onChange, onCreateMaster }: BillLoadLines
               <FormReadOnlyField
                 label="Freight"
                 compact
+                labelContainerColor={colors.surfaceContainerLow}
                 value={
                   toFormNumber(line.freight) == null
                     ? ''
@@ -366,6 +367,7 @@ export function BillLoadLines({ loads, onChange, onCreateMaster }: BillLoadLines
                 label="Balance"
                 compact
                 highlighted
+                labelContainerColor={colors.surfaceContainerLow}
                 value={
                   toFormNumber(line.balance) == null
                     ? ''

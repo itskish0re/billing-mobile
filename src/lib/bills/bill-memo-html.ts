@@ -40,6 +40,9 @@ export function buildBillMemoHtml(
     data.isCancelled && images.cancelledStamp
       ? `<img class="stamp" src="${images.cancelledStamp}" alt="Cancelled" />`
       : '';
+  const logoHtml = images.logo
+    ? `<img class="logo" src="${images.logo}" alt="" />`
+    : '<div class="logo"></div>';
   const signatureHtml =
     data.isSigned && images.signature
       ? `<img class="sign-img" src="${images.signature}" alt="Signature" />`
@@ -156,7 +159,7 @@ export function buildBillMemoHtml(
     .banner div { line-height: 1.25; }
     .brand { display: table; width: 100%; margin-bottom: 8px; }
     .brand > * { display: table-cell; vertical-align: top; }
-    .logo { width: 72px; height: 82px; border: 1px solid #111; }
+    .logo { width: 72px; height: 82px; object-fit: contain; display: block; }
     .brand-copy { padding: 4px 10px 0; }
     .company { color: #c8232c; font-weight: 700; line-height: 1.1; margin-bottom: 4px; }
     .company .main { font-size: 28px; }
@@ -231,7 +234,7 @@ export function buildBillMemoHtml(
       </div>
 
       <div class="brand">
-        <div class="logo"></div>
+        ${logoHtml}
         <div class="brand-copy">
           <div class="company">
             <span class="main">${text(company.companyNameMain)}</span>

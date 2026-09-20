@@ -3,7 +3,7 @@ import { persist } from 'zustand/middleware';
 
 import { mmkvJSONStorage } from '@/lib/storage/mmkv';
 
-type ThemeMode = 'light' | 'dark' | 'system';
+export type ThemeMode = 'light' | 'dark' | 'system';
 
 type AppState = {
   themeMode: ThemeMode;

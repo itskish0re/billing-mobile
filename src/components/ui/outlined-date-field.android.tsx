@@ -45,6 +45,8 @@ export type OutlinedDateFieldProps = {
     end?: Date;
   };
   compact?: boolean;
+  /** Parent fill behind the floating label. Must match the surface the field sits on. */
+  labelContainerColor?: string;
 };
 
 /**
@@ -64,11 +66,13 @@ export function OutlinedDateField({
   dismissButtonLabel = 'Cancel',
   selectableDates,
   compact = false,
+  labelContainerColor,
 }: OutlinedDateFieldProps) {
   const colors = useMaterialColors();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const outline = error ? colors.error : colors.outline;
   const labelColor = error ? colors.error : colors.onSurfaceVariant;
+  const notchColor = labelContainerColor ?? colors.surface;
 
   const openDialog = () => {
     setIsDialogOpen(true);
@@ -116,7 +120,7 @@ export function OutlinedDateField({
         <Text
           color={labelColor}
           style={{ typography: 'bodySmall' }}
-          modifiers={[offset(12, -8), background(colors.surface), padding(4, 0, 4, 0)]}>
+          modifiers={[offset(12, -8), background(notchColor), padding(4, 0, 4, 0)]}>
           {label}
         </Text>
       </Box>

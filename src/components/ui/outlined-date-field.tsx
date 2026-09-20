@@ -11,6 +11,8 @@ export type OutlinedDateFieldProps = {
     end?: Date;
   };
   compact?: boolean;
+  /** Parent fill behind the floating label. Must match the surface the field sits on. */
+  labelContainerColor?: string;
 };
 
 export function OutlinedDateField(_props: OutlinedDateFieldProps) {

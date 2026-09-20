@@ -27,7 +27,7 @@ export function MastersEntityCard({ row, onEdit, onDelete }: MastersEntityCardPr
   return (
     <OutlinedCard
       modifiers={[fillMaxWidth()]}
-      colors={{ containerColor: colors.surface }}
+      colors={{ containerColor: colors.surfaceContainer }}
       border={{ color: colors.outlineVariant, width: 1 }}>
       <Column
         modifiers={[fillMaxWidth(), padding(16, 16, 16, 16)]}

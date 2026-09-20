@@ -21,6 +21,8 @@ export type FormReadOnlyFieldProps = {
   compact?: boolean;
   /** Renders the value in a monospaced, letter-spaced style (truck/phone numbers). */
   monospace?: boolean;
+  /** Parent fill behind the floating label. Must match the surface the field sits on. */
+  labelContainerColor?: string;
 };
 
 /**
@@ -34,8 +36,10 @@ export function FormReadOnlyField({
   highlighted,
   compact,
   monospace,
+  labelContainerColor,
 }: FormReadOnlyFieldProps) {
   const colors = useMaterialColors();
+  const notchColor = labelContainerColor ?? colors.surface;
   const valueColor = highlighted
     ? colors.primary
     : value
@@ -78,7 +82,7 @@ export function FormReadOnlyField({
         <Text
           color={colors.onSurfaceVariant}
           style={{ typography: 'bodySmall' }}
-          modifiers={[offset(12, -8), background(colors.surface), padding(4, 0, 4, 0)]}>
+          modifiers={[offset(12, -8), background(notchColor), padding(4, 0, 4, 0)]}>
           {label}
         </Text>
       </Box>

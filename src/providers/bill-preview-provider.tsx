@@ -20,6 +20,8 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BillPreviewCanvas } from '@/components/bill-preview/bill-preview-canvas';
+import { TabChrome } from '@/constants/brand';
+import { useResolvedColorScheme } from '@/hooks/use-resolved-color-scheme';
 import { SnackbarHost } from '@/providers/snackbar-provider';
 import type { BillPreviewModel } from '@/types/bill-preview';
 
@@ -43,6 +45,8 @@ const SLIDE_OFFSET = Dimensions.get('window').height;
 
 export function BillPreviewProvider({ children }: { children: ReactNode }) {
   const insets = useSafeAreaInsets();
+  const scheme = useResolvedColorScheme();
+  const chrome = TabChrome[scheme];
   const [data, setData] = useState<BillPreviewModel | null>(null);
 
   // Backdrop fades in; the sheet slides up — driven by two independent values.
@@ -117,20 +121,38 @@ export function BillPreviewProvider({ children }: { children: ReactNode }) {
         <View style={styles.root}>
           <Animated.View style={[styles.backdrop, { opacity: fade }]} />
           <Animated.View
-            style={[styles.sheet, { paddingBottom: insets.bottom, transform: [{ translateY }] }]}>
+            style={[
+              styles.sheet,
+              {
+                paddingBottom: insets.bottom,
+                transform: [{ translateY }],
+                backgroundColor: chrome.contentBackground,
+              },
+            ]}>
             <GestureHandlerRootView style={styles.sheetInner}>
-              <View style={styles.header}>
-                <Text style={styles.headerTitle}>Bill preview</Text>
+              <View
+                style={[
+                  styles.header,
+                  {
+                    backgroundColor: chrome.headerBackground,
+                    borderBottomColor: chrome.divider,
+                  },
+                ]}>
+                <Text style={[styles.headerTitle, { color: chrome.onHeader }]}>Bill preview</Text>
                 <Pressable
                   style={styles.closeButton}
                   onPress={close}
                   hitSlop={10}
                   accessibilityRole="button"
                   accessibilityLabel="Close preview">
-                  <Text style={styles.closeIcon}>{'\u2715'}</Text>
+                  <Text style={[styles.closeIcon, { color: chrome.onHeader }]}>{'\u2715'}</Text>
                 </Pressable>
               </View>
-              <View style={styles.canvasWrap}>
+              <View
+                style={[
+                  styles.canvasWrap,
+                  { backgroundColor: scheme === 'dark' ? '#0E0D10' : '#E4D6C8' },
+                ]}>
                 {data ? <BillPreviewCanvas data={data} /> : null}
               </View>
             </GestureHandlerRootView>
@@ -157,7 +179,6 @@ const styles = StyleSheet.create({
   },
   sheet: {
     height: '80%',
-    backgroundColor: '#e9eaee',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     overflow: 'hidden',
@@ -172,14 +193,11 @@ const styles = StyleSheet.create({
     paddingLeft: 20,
     paddingRight: 12,
     height: 56,
-    backgroundColor: '#fff',
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: 'rgba(0,0,0,0.12)',
   },
   headerTitle: {
     fontSize: 17,
     fontWeight: '700',
-    color: '#111',
   },
   closeButton: {
     width: 40,
@@ -191,7 +209,6 @@ const styles = StyleSheet.create({
   closeIcon: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#111',
   },
   canvasWrap: {
     flex: 1,

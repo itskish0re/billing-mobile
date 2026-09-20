@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { ThemePreferenceSync } from '@/components/settings/theme-preference-sync';
 import { AuthProvider } from '@/providers/auth-provider';
 import { BillFormProvider } from '@/providers/bill-form-provider';
 import { BillPreviewProvider } from '@/providers/bill-preview-provider';
@@ -20,6 +21,7 @@ const queryClient = new QueryClient({
 export function AppProviders({ children }: { children: ReactNode }) {
   return (
     <SafeAreaProvider>
+      <ThemePreferenceSync />
       <NetworkProvider>
         <AuthProvider>
           <QueryClientProvider client={queryClient}>

@@ -1,3 +1,4 @@
+export const APP_NAME = 'Shiv Billing';
 export const BRAND_SEED_COLOR = '#9A6B43';
 
 /** Static chrome colors aligned with M3 secondaryContainer for the brand seed. */
@@ -9,6 +10,7 @@ export const TabChrome = {
     contentBackground: '#FFFBFE',
     divider: '#D8C4B4',
     statusBar: '#F3E8DC',
+    tabRipple: 'rgba(154, 107, 67, 0.28)',
   },
   dark: {
     headerBackground: '#3E2F24',
@@ -17,6 +19,7 @@ export const TabChrome = {
     contentBackground: '#1C1B1F',
     divider: '#5C4A3A',
     statusBar: '#3E2F24',
+    tabRipple: 'rgba(243, 232, 220, 0.24)',
   },
 } as const;
 

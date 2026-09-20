@@ -19,6 +19,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BRAND_SEED_COLOR, TabChrome } from '@/constants/brand';
+import { useResolvedColorScheme } from '@/hooks/use-resolved-color-scheme';
 
 export type SnackbarVariant = 'success' | 'error';
 
@@ -53,20 +54,31 @@ const SnackbarContext = createContext<SnackbarContextValue | null>(null);
 
 const SNACKBAR_BELOW_STATUS = 12;
 
-const VARIANT_STYLES = {
-  success: {
-    background: TabChrome.light.headerBackground,
-    text: TabChrome.light.onHeader,
-    accent: BRAND_SEED_COLOR,
-    dismiss: TabChrome.light.onHeaderMuted,
-  },
-  error: {
-    background: '#F9DEDC',
-    text: '#410E0B',
-    accent: '#B3261E',
-    dismiss: '#8C1D18',
-  },
-} as const;
+function variantStyles(scheme: 'light' | 'dark') {
+  const chrome = TabChrome[scheme];
+  return {
+    success: {
+      background: chrome.headerBackground,
+      text: chrome.onHeader,
+      accent: BRAND_SEED_COLOR,
+      dismiss: chrome.onHeaderMuted,
+    },
+    error:
+      scheme === 'dark'
+        ? {
+            background: '#8C1D18',
+            text: '#F9DEDC',
+            accent: '#F2B8B5',
+            dismiss: '#F2B8B5',
+          }
+        : {
+            background: '#F9DEDC',
+            text: '#410E0B',
+            accent: '#B3261E',
+            dismiss: '#8C1D18',
+          },
+  } as const;
+}
 
 function ToastCard({
   toast,
@@ -78,7 +90,8 @@ function ToastCard({
   const opacity = useRef(new Animated.Value(0)).current;
   const progress = useRef(new Animated.Value(1)).current;
   const finishedRef = useRef(false);
-  const colors = VARIANT_STYLES[toast.variant];
+  const scheme = useResolvedColorScheme();
+  const colors = variantStyles(scheme)[toast.variant];
 
   const finish = useCallback(
     (animated: boolean) => {

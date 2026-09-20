@@ -9,8 +9,8 @@ import type { ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { TabHeader } from '@/components/tab-header';
-import { BRAND_SEED_COLOR } from '@/constants/brand';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { BRAND_SEED_COLOR, TabChrome } from '@/constants/brand';
+import { useResolvedColorScheme } from '@/hooks/use-resolved-color-scheme';
 
 export type ScreenShellProps = {
   children?: ReactNode;
@@ -48,11 +48,11 @@ export function ScreenShell({
   horizontalPadding,
   topPadding,
 }: ScreenShellProps) {
-  const colorScheme = useColorScheme();
-  const scheme = colorScheme === 'unspecified' ? 'light' : colorScheme;
+  const scheme = useResolvedColorScheme();
+  const chrome = TabChrome[scheme];
 
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, { backgroundColor: chrome.contentBackground }]}>
       <Host
         key={scheme}
         style={styles.host}

@@ -10,7 +10,11 @@ import {
   formatBillPreviewWeight,
   prepareBillPreviewLoads,
 } from '@/lib/bills/bill-preview';
-import { BILL_CANCELLED_STAMP, BILL_SIGNATURE_IMAGE } from '@/lib/bills/bill-memo-images';
+import {
+  BILL_CANCELLED_STAMP,
+  BILL_LOGO_IMAGE,
+  BILL_SIGNATURE_IMAGE,
+} from '@/lib/bills/bill-memo-images';
 import { formatTruckNumber } from '@/lib/bills/format-truck-number';
 import type { BillPreviewLoadLine, BillPreviewModel } from '@/types/bill-preview';
 
@@ -18,7 +22,9 @@ import type { BillPreviewLoadLine, BillPreviewModel } from '@/types/bill-preview
 export const BILL_MEMO_WIDTH = 794;
 export const BILL_MEMO_HEIGHT = 1123;
 
-const INK = '#111';
+/** Print colors — the memo stays a white paper in both app themes. */
+const PAPER = '#FFFFFF';
+const INK = '#111111';
 const BLUE = '#1a4f9c';
 const RED = '#c8232c';
 
@@ -184,7 +190,7 @@ export function BillMemoTemplate({ data }: BillMemoTemplateProps) {
     .join(', ');
 
   return (
-    <View style={styles.memo}>
+    <View style={styles.memo} collapsable={false}>
       <View style={styles.outer}>
         {/* Top strip */}
         <View style={styles.top}>
@@ -205,7 +211,11 @@ export function BillMemoTemplate({ data }: BillMemoTemplateProps) {
 
         {/* Brand row */}
         <View style={styles.brandRow}>
-          <View style={styles.logo} />
+          <Image
+            source={BILL_LOGO_IMAGE}
+            style={styles.logo}
+            contentFit="contain"
+          />
           <View style={styles.brandCopy}>
             <View style={styles.companyNameRow}>
               <Text style={styles.companyNameMain}>{company.companyNameMain}</Text>
@@ -473,7 +483,7 @@ const styles = StyleSheet.create({
   memo: {
     width: BILL_MEMO_WIDTH,
     minHeight: BILL_MEMO_HEIGHT,
-    backgroundColor: '#fff',
+    backgroundColor: PAPER,
     paddingHorizontal: 12,
     paddingTop: 10,
     paddingBottom: 12,
@@ -530,9 +540,9 @@ const styles = StyleSheet.create({
     borderTopWidth: BANNER_HEIGHT,
     borderTopColor: BLUE,
     borderLeftWidth: BANNER_SLANT,
-    borderLeftColor: '#fff',
+    borderLeftColor: PAPER,
     borderRightWidth: BANNER_SLANT,
-    borderRightColor: '#fff',
+    borderRightColor: PAPER,
     borderBottomWidth: 0,
   },
   bannerCopy: {
@@ -569,8 +579,6 @@ const styles = StyleSheet.create({
   logo: {
     width: 72,
     height: 82,
-    borderWidth: 1,
-    borderColor: INK,
     marginRight: 10,
     flexShrink: 0,
   },

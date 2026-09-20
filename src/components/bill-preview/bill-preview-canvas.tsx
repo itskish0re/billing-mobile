@@ -16,6 +16,8 @@ import {
 } from 'react-native-gesture-handler';
 
 import { BILL_MEMO_WIDTH, BillMemoTemplate } from '@/components/bill-preview/bill-memo-template';
+import { TabChrome } from '@/constants/brand';
+import { useResolvedColorScheme } from '@/hooks/use-resolved-color-scheme';
 import type { BillPreviewModel } from '@/types/bill-preview';
 
 const MIN_SCALE = 0.2;
@@ -37,6 +39,7 @@ function clamp(value: number, min: number, max: number): number {
  * the reanimated/worklets babel setup.
  */
 export function BillPreviewCanvas({ data }: BillPreviewCanvasProps) {
+  const chrome = TabChrome[useResolvedColorScheme()];
   const [container, setContainer] = useState({ width: 0, height: 0 });
   const didFit = useRef(false);
 
@@ -180,27 +183,27 @@ export function BillPreviewCanvas({ data }: BillPreviewCanvasProps) {
 
       <View style={styles.toolbar} pointerEvents="box-none">
         <Pressable
-          style={styles.fitButton}
+          style={[styles.fitButton, { backgroundColor: chrome.headerBackground }]}
           onPress={() => fitToWidth()}
           hitSlop={8}
           accessibilityLabel="Fit to width">
-          <Text style={styles.fitButtonText}>Fit width</Text>
+          <Text style={[styles.fitButtonText, { color: chrome.onHeader }]}>Fit width</Text>
         </Pressable>
-        <View style={styles.zoomGroup}>
+        <View style={[styles.zoomGroup, { backgroundColor: chrome.headerBackground }]}>
           <Pressable
             style={[styles.zoomButton, styles.zoomButtonLeft]}
             onPress={zoomOut}
             hitSlop={8}
             accessibilityLabel="Zoom out">
-            <Text style={styles.zoomButtonText}>{'\u2212'}</Text>
+            <Text style={[styles.zoomButtonText, { color: chrome.onHeader }]}>{'\u2212'}</Text>
           </Pressable>
-          <View style={styles.zoomDivider} />
+          <View style={[styles.zoomDivider, { backgroundColor: chrome.divider }]} />
           <Pressable
             style={[styles.zoomButton, styles.zoomButtonRight]}
             onPress={zoomIn}
             hitSlop={8}
             accessibilityLabel="Zoom in">
-            <Text style={styles.zoomButtonText}>+</Text>
+            <Text style={[styles.zoomButtonText, { color: chrome.onHeader }]}>+</Text>
           </Pressable>
         </View>
       </View>
@@ -233,12 +236,10 @@ const styles = StyleSheet.create({
     height: 44,
     paddingHorizontal: 16,
     borderRadius: 22,
-    backgroundColor: 'rgba(17,17,17,0.82)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   fitButtonText: {
-    color: '#fff',
     fontSize: 13,
     fontWeight: '600',
   },
@@ -247,7 +248,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     height: 44,
     borderRadius: 22,
-    backgroundColor: 'rgba(17,17,17,0.82)',
     overflow: 'hidden',
   },
   zoomButton: {
@@ -261,10 +261,8 @@ const styles = StyleSheet.create({
   zoomDivider: {
     width: StyleSheet.hairlineWidth,
     height: 24,
-    backgroundColor: 'rgba(255,255,255,0.3)',
   },
   zoomButtonText: {
-    color: '#fff',
     fontSize: 22,
     fontWeight: '600',
     lineHeight: 24,

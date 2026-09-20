@@ -3,6 +3,7 @@ import { useRouter } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 
 import { FinancialYearPicker } from '@/components/settings/financial-year-picker';
+import { ThemeModePicker } from '@/components/settings/theme-mode-picker';
 import { useAuth } from '@/providers/auth-provider';
 
 export function SettingsScreen() {
@@ -15,10 +16,15 @@ export function SettingsScreen() {
       <View style={styles.section}>
         <Text textStyle={styles.sectionLabel}>Account</Text>
         <Button
-          label={`Update name · ${displayName}`}
+          label={`Name · ${displayName}`}
           variant="outlined"
           onPress={() => router.push('/settings/update-name')}
         />
+      </View>
+
+      <View style={styles.section}>
+        <Text textStyle={styles.sectionLabel}>Appearance</Text>
+        <ThemeModePicker />
       </View>
 
       <View style={styles.section}>
