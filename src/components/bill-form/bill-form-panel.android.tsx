@@ -3,7 +3,10 @@ import {
   Button,
   Column,
   HorizontalDivider,
+  Icon,
+  IconButton,
   Row,
+  Shape,
   Text,
   useMaterialColors,
 } from '@expo/ui/jetpack-compose';
@@ -49,6 +52,12 @@ import { validateBillForm } from '@/lib/validation/bill-form-schema';
 import { useBillPreview } from '@/providers/bill-preview-provider';
 import { useSnackbar } from '@/providers/snackbar-provider';
 import type { BillFormValues, BillLoadFormLine } from '@/types/bill-form';
+
+const CANCEL_ICON = require('@/assets/icons/cancel.xml');
+const SIGN_ICON = require('@/assets/icons/draw.xml');
+const HEADER_ICON_SHAPE = Shape.RoundedCorner({
+  cornerRadii: { topStart: 8, topEnd: 8, bottomStart: 8, bottomEnd: 8 },
+});
 
 export type BillFormPanelProps = {
   visible: boolean;
@@ -221,7 +230,31 @@ export function BillFormPanel({
               padding(16, topInset + 12, 16, 12),
             ]}
             verticalAlignment="center">
-            <Column modifiers={[weight(1)]} />
+            <Row
+              modifiers={[weight(1)]}
+              horizontalArrangement={{ spacedBy: 8 }}
+              verticalAlignment="center">
+              <IconButton
+                enabled={!masterFormOpen && !isSaving}
+                shape={HEADER_ICON_SHAPE}
+                colors={{
+                  containerColor: values.isCancelled ? colors.error : 'transparent',
+                  contentColor: values.isCancelled ? colors.onError : headerContentColor,
+                }}
+                onClick={() => patchValues({ isCancelled: !values.isCancelled })}>
+                <Icon source={CANCEL_ICON} size={24} />
+              </IconButton>
+              <IconButton
+                enabled={!masterFormOpen && !isSaving}
+                shape={HEADER_ICON_SHAPE}
+                colors={{
+                  containerColor: values.isSigned ? colors.primary : 'transparent',
+                  contentColor: values.isSigned ? colors.onPrimary : headerContentColor,
+                }}
+                onClick={() => patchValues({ isSigned: !values.isSigned })}>
+                <Icon source={SIGN_ICON} size={24} />
+              </IconButton>
+            </Row>
             <Text color={headerContentColor} style={{ typography: 'titleLarge' }}>
               {isEdit ? 'Edit bill' : 'New bill'}
             </Text>

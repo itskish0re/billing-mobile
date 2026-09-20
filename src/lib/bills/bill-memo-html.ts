@@ -8,6 +8,7 @@ import {
   prepareBillPreviewLoads,
 } from '@/lib/bills/bill-preview';
 import { formatTruckNumber } from '@/lib/bills/format-truck-number';
+import type { BillMemoImageUris } from '@/lib/bills/bill-memo-images';
 import type { BillPreviewModel } from '@/types/bill-preview';
 
 function escapeHtml(value: string): string {
@@ -23,7 +24,10 @@ function text(value: string | null | undefined): string {
 }
 
 /** A4 HTML for `expo-print`, matching the on-screen truck-memo template. */
-export function buildBillMemoHtml(data: BillPreviewModel): string {
+export function buildBillMemoHtml(
+  data: BillPreviewModel,
+  images: BillMemoImageUris = {}
+): string {
   const { company } = data;
   const loadRows = prepareBillPreviewLoads(data.loads);
   const chargeRows = buildBillPreviewChargeRows(data);
@@ -32,6 +36,14 @@ export function buildBillMemoHtml(data: BillPreviewModel): string {
     .filter((mobile) => mobile?.trim())
     .join(', ');
   const cancelledClass = data.isCancelled ? ' cancelled' : '';
+  const stampHtml =
+    data.isCancelled && images.cancelledStamp
+      ? `<img class="stamp" src="${images.cancelledStamp}" alt="Cancelled" />`
+      : '';
+  const signatureHtml =
+    data.isSigned && images.signature
+      ? `<img class="sign-img" src="${images.signature}" alt="Signature" />`
+      : '';
 
   const loadBody = loadRows
     .map((row) => {
@@ -113,25 +125,35 @@ export function buildBillMemoHtml(data: BillPreviewModel): string {
       font-family: Arial, Helvetica, sans-serif;
       font-size: 11px;
     }
-    .memo { width: 100%; }
-    .memo.cancelled { opacity: 0.72; }
-    .frame { border: 2px solid #111; padding: 8px 10px 10px; }
-    .top { display: table; width: 100%; margin-bottom: 6px; }
-    .top > * { display: table-cell; vertical-align: middle; }
-    .motto { font-weight: 600; letter-spacing: 0.5px; width: 28%; }
+    .memo { width: 100%; position: relative; }
+    .stamp {
+      position: absolute;
+      top: 32%;
+      left: 50%;
+      width: 280px;
+      transform: translate(-50%, -50%);
+      opacity: 0.38;
+      z-index: 5;
+    }
+    .frame { position: relative; border: 2px solid #111; padding: 0 10px 10px; overflow: hidden; }
+    .top { display: flex; align-items: flex-start; width: 100%; height: 38px; margin-bottom: 6px; }
+    .motto { flex: 1; font-weight: 600; letter-spacing: 0.5px; padding: 10px 8px 0 0; }
+    .phone { flex: 1; text-align: right; font-weight: 700; font-size: 13px; padding: 10px 0 0 8px; }
     .banner {
+      flex: 0 0 300px;
+      width: 300px;
       background: #1a4f9c;
       color: #fff;
       text-align: center;
       font-weight: 700;
-      letter-spacing: 1.2px;
-      padding: 6px 28px 7px;
-      width: 36%;
-      -webkit-clip-path: polygon(0 0, 100% 0, 86% 100%, 14% 100%);
-      clip-path: polygon(0 0, 100% 0, 86% 100%, 14% 100%);
+      letter-spacing: 0.6px;
+      font-size: 11px;
+      line-height: 1.25;
+      padding: 4px 28px 5px;
+      -webkit-clip-path: polygon(0 0, 100% 0, 90.67% 100%, 9.33% 100%);
+      clip-path: polygon(0 0, 100% 0, 90.67% 100%, 9.33% 100%);
     }
     .banner div { line-height: 1.25; }
-    .phone { text-align: right; font-weight: 700; font-size: 13px; width: 36%; }
     .brand { display: table; width: 100%; margin-bottom: 8px; }
     .brand > * { display: table-cell; vertical-align: top; }
     .logo { width: 72px; height: 82px; border: 1px solid #111; }
@@ -139,7 +161,7 @@ export function buildBillMemoHtml(data: BillPreviewModel): string {
     .company { color: #c8232c; font-weight: 700; line-height: 1.1; margin-bottom: 4px; }
     .company .main { font-size: 28px; }
     .company .sub { font-size: 22px; margin-left: 8px; }
-    .address { font-weight: 500; line-height: 1.4; }
+    .address { font-weight: 500; line-height: 1.4; word-break: break-word; }
     .truck { width: 136px; border: 1px solid #111; padding: 6px 10px 7px; }
     .truck .label { font-weight: 600; }
     .truck .value { margin-top: 8px; }
@@ -149,7 +171,9 @@ export function buildBillMemoHtml(data: BillPreviewModel): string {
       padding: 5px 8px;
       vertical-align: top;
     }
-    table.meta .lbl { font-weight: 600; white-space: nowrap; width: 28%; }
+    table.meta { table-layout: auto; }
+    table.meta .lbl { font-weight: 600; white-space: nowrap; width: 1%; }
+    table.meta td { word-break: break-word; }
     .red { color: #c8232c; font-weight: 700; font-size: 15px; }
     table.loads { margin-top: 0; border-top: 0; table-layout: fixed; }
     table.loads col.c-sno { width: 4%; }
@@ -188,12 +212,14 @@ export function buildBillMemoHtml(data: BillPreviewModel): string {
     .signs > * { display: table-cell; width: 50%; vertical-align: bottom; }
     .signs .right { text-align: right; }
     .sign-line { border-bottom: 1px solid #111; height: 48px; margin-bottom: 6px; }
-    .signs .right .sign-line { margin-left: auto; max-width: 220px; }
+    .signs .right .sign-line { margin-left: auto; max-width: 220px; text-align: center; }
+    .sign-img { max-width: 200px; max-height: 46px; }
     .sign-label { font-weight: 600; color: #c8232c; }
   </style>
 </head>
 <body>
   <div class="memo${cancelledClass}">
+    ${stampHtml}
     <div class="frame">
       <div class="top">
         <div class="motto">${text(company.motto)}</div>
@@ -321,7 +347,7 @@ export function buildBillMemoHtml(data: BillPreviewModel): string {
         </div>
         -->
         <div class="right">
-          <div class="sign-line"></div>
+          <div class="sign-line">${signatureHtml}</div>
           <div class="sign-label">${text(company.signatureLabel)}</div>
         </div>
       </div>

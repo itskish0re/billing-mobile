@@ -5,22 +5,28 @@ import {
   LazyColumn,
   OutlinedCard,
   PullToRefreshBox,
+  RNHostView,
   Row,
   Text,
   useMaterialColors,
 } from '@expo/ui/jetpack-compose';
 import {
   align,
+  background,
   clickable,
   clip,
   fillMaxSize,
   fillMaxWidth,
+  matchParentSize,
   padding,
   Shapes,
   weight,
 } from '@expo/ui/jetpack-compose/modifiers';
+import { Image } from 'expo-image';
 import { useState } from 'react';
+import { StyleSheet } from 'react-native';
 
+import { BILL_CANCELLED_STAMP } from '@/lib/bills/bill-memo-images';
 import { mapBillListRowToPreview } from '@/lib/bills/bill-preview';
 import { formatTruckNumber } from '@/lib/bills/format-truck-number';
 import { shareBillPdf } from '@/lib/bills/share-bill-pdf';
@@ -103,57 +109,82 @@ function BillListCard({
       modifiers={[fillMaxWidth()]}
       colors={{ containerColor: colors.surface }}
       border={{ color: colors.outlineVariant, width: 1 }}>
-      <Column
-        modifiers={[fillMaxWidth(), padding(12, 8, 12, 8)]}
-        verticalArrangement={{ spacedBy: 2 }}>
-        <Row modifiers={[fillMaxWidth()]} verticalAlignment="center" horizontalArrangement="spaceBetween">
-          <Row verticalAlignment="center" horizontalArrangement={{ spacedBy: 6 }}>
-            <Text color={colors.onSurface} style={{ typography: 'titleSmall' }}>
-              {row.billNumber ? `BILL ${row.billNumber}` : 'BILL'}
-            </Text>
-            {row.isCancelled ? (
-              <Text color={colors.error} style={{ typography: 'labelSmall' }}>
-                Cancelled
+      <Box modifiers={[fillMaxWidth()]}>
+        <Column
+          modifiers={[fillMaxWidth(), padding(12, 8, 12, 8)]}
+          verticalArrangement={{ spacedBy: 2 }}>
+          <Row modifiers={[fillMaxWidth()]} verticalAlignment="center" horizontalArrangement="spaceBetween">
+            <Box
+              modifiers={[
+                clip(Shapes.RoundedCorner(6)),
+                background(colors.primary),
+                padding(6, 2, 6, 2),
+              ]}>
+              <Text color={colors.onPrimary} style={{ typography: 'labelMedium' }}>
+                {row.billNumber ? `BILL ${row.billNumber}` : 'BILL'}
               </Text>
-            ) : null}
+            </Box>
+            <Text
+              modifiers={[weight(1)]}
+              maxLines={1}
+              overflow="ellipsis"
+              color={colors.onSurface}
+              style={{ typography: 'bodyMedium', textAlign: 'end' }}>
+              {route}
+            </Text>
           </Row>
+
           <Text
-            modifiers={[weight(1)]}
             maxLines={1}
             overflow="ellipsis"
             color={colors.onSurface}
-            style={{ typography: 'bodyMedium', textAlign: 'end' }}>
-            {route}
+            style={{ typography: 'bodyMedium' }}>
+            {row.nameBoardName.trim() || '—'}
           </Text>
-        </Row>
 
-        <Text
-          maxLines={1}
-          overflow="ellipsis"
-          color={colors.onSurface}
-          style={{ typography: 'bodyMedium' }}>
-          {row.nameBoardName.trim() || '—'}
-        </Text>
-
-        <Row modifiers={[fillMaxWidth()]} verticalAlignment="center" horizontalArrangement="spaceBetween">
-          <Text
-            modifiers={[weight(1)]}
-            maxLines={1}
-            overflow="ellipsis"
-            color={colors.onSurface}
-            style={{ typography: 'bodyMedium', fontFamily: 'monospace' }}>
-            {formattedTruck || '—'}
-          </Text>
-          <Row horizontalArrangement={{ spacedBy: 2 }} verticalAlignment="center">
-            <CardAction icon={EDIT_ICON} onClick={() => onEdit(row)} />
-            <CardAction icon={PREVIEW_ICON} onClick={() => onPreview(row)} />
-            <CardAction icon={SHARE_ICON} enabled={!sharing} onClick={() => onShare(row)} />
+          <Row modifiers={[fillMaxWidth()]} verticalAlignment="center" horizontalArrangement="spaceBetween">
+            <Text
+              modifiers={[weight(1)]}
+              maxLines={1}
+              overflow="ellipsis"
+              color={colors.onSurface}
+              style={{ typography: 'bodyMedium', fontFamily: 'monospace' }}>
+              {formattedTruck || '—'}
+            </Text>
+            <Row horizontalArrangement={{ spacedBy: 2 }} verticalAlignment="center">
+              <CardAction icon={EDIT_ICON} onClick={() => onEdit(row)} />
+              <CardAction icon={PREVIEW_ICON} onClick={() => onPreview(row)} />
+              <CardAction icon={SHARE_ICON} enabled={!sharing} onClick={() => onShare(row)} />
+            </Row>
           </Row>
-        </Row>
-      </Column>
+        </Column>
+        {row.isCancelled ? (
+          <Box modifiers={[matchParentSize()]} contentAlignment="center">
+            <RNHostView matchContents style={styles.stampHost}>
+              <Image
+                source={BILL_CANCELLED_STAMP}
+                style={styles.stamp}
+                contentFit="contain"
+                pointerEvents="none"
+              />
+            </RNHostView>
+          </Box>
+        ) : null}
+      </Box>
     </OutlinedCard>
   );
 }
+
+const styles = StyleSheet.create({
+  stampHost: {
+    pointerEvents: 'none',
+  },
+  stamp: {
+    width: 96,
+    height: 96,
+    opacity: 0.32,
+  },
+});
 
 /**
  * Bills tab list. Fetches the active financial year's bills using the saved

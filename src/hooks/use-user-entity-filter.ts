@@ -20,6 +20,9 @@ const ENTITY_FIELDS: Record<UserFilterEntity, QueryFilterField[]> = {
   bill: BILL_FILTER_FIELDS,
 };
 
+/** Used while the saved row is loading, and for users who have never saved a filter. */
+export const EMPTY_FILTER_QUERY = '';
+
 function getMonthStart(date = new Date()) {
   return new Date(date.getFullYear(), date.getMonth(), 1);
 }
@@ -38,12 +41,13 @@ export function useUserEntityFilter(entity: UserFilterEntity) {
   const [clauses, setClauses] = useState<QueryFilterClause[]>(() => clausesOrDefault([]));
   const [startDate, setStartDateState] = useState<Date | null>(() => getMonthStart());
   const [endDate, setEndDateState] = useState<Date | null>(() => new Date());
-  const [appliedQuery, setAppliedQuery] = useState('');
+  const [appliedQuery, setAppliedQuery] = useState(EMPTY_FILTER_QUERY);
 
   const filterQuery = useQuery({
     queryKey: userFilterQueryKey(userId, entity),
     queryFn: () => fetchUserFilter(userId as string, entity),
     enabled: Boolean(userId),
+    placeholderData: null,
   });
 
   useEffect(() => {
@@ -52,7 +56,7 @@ export function useUserEntityFilter(entity: UserFilterEntity) {
       setClauses(clausesOrDefault([]));
       setStartDateState(getMonthStart());
       setEndDateState(new Date());
-      setAppliedQuery('');
+      setAppliedQuery(EMPTY_FILTER_QUERY);
       return;
     }
 
@@ -60,22 +64,18 @@ export function useUserEntityFilter(entity: UserFilterEntity) {
       return;
     }
 
-    const saved = filterQuery.data?.filterQuery ?? '';
+    const saved = filterQuery.data?.filterQuery ?? EMPTY_FILTER_QUERY;
+    const parsed = parseFilterQuery(saved, fields);
+    setClauses(clausesOrDefault(parsed.clauses));
+
     if (saved) {
-      const parsed = parseFilterQuery(saved, fields);
-      setClauses(clausesOrDefault(parsed.clauses));
       setStartDateState(parsed.startDate);
       setEndDateState(parsed.endDate);
       setAppliedQuery(saved);
     } else {
-      const nextStart = getMonthStart();
-      const nextEnd = new Date();
-      setClauses(clausesOrDefault([]));
-      setStartDateState(nextStart);
-      setEndDateState(nextEnd);
-      setAppliedQuery(
-        serializeFilterQuery([], { startDate: nextStart, endDate: nextEnd })
-      );
+      setStartDateState(getMonthStart());
+      setEndDateState(new Date());
+      setAppliedQuery(EMPTY_FILTER_QUERY);
     }
     hydratedForUser.current = userId;
   }, [fields, filterQuery.data?.filterQuery, filterQuery.isFetched, userId]);
@@ -144,7 +144,7 @@ export function useUserEntityFilter(entity: UserFilterEntity) {
     fieldErrors,
     isDateRangeValid,
     appliedQuery,
-    isReady: !userId || (filterQuery.isFetched && hydratedForUser.current === userId),
+    isReady: true,
     isSaving: saveMutation.isPending,
     save,
   };

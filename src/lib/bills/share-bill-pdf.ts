@@ -3,6 +3,7 @@ import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 
 import { buildBillMemoHtml } from '@/lib/bills/bill-memo-html';
+import { loadBillMemoImageUris } from '@/lib/bills/bill-memo-images';
 import type { BillPreviewModel } from '@/types/bill-preview';
 
 /** A4 at 72 PPI — expo-print page size in pixels. */
@@ -52,7 +53,7 @@ export async function shareBillPdf(data: BillPreviewModel): Promise<void> {
   }
 
   const { uri } = await Print.printToFileAsync({
-    html: buildBillMemoHtml(data),
+    html: buildBillMemoHtml(data, await loadBillMemoImageUris()),
     width: A4_WIDTH,
     height: A4_HEIGHT,
   });

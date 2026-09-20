@@ -121,6 +121,7 @@ export function createInitialBillFormValues(): BillFormValues {
     others: [],
     total: '',
     isCancelled: false,
+    isSigned: false,
     loads: [createEmptyLoadLine()],
   });
 }

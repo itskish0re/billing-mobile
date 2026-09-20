@@ -107,7 +107,7 @@ export function TransactionsScreen() {
 
         <TransactionsFilterAccordion
           extra={
-            activeTab === 'bills' && filtersReady ? (
+            activeTab === 'bills' ? (
               <EntityQueryFilter
                 fields={fields}
                 value={clauses}

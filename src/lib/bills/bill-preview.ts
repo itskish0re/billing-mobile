@@ -252,6 +252,7 @@ export function mapBillFormToPreview(values: BillFormValues): BillPreviewModel {
     total: toFormNumber(values.total),
     totalFreight: toFormNumber(values.totalFreight),
     isCancelled: values.isCancelled,
+    isSigned: values.isSigned,
   };
 }
 
@@ -304,5 +305,6 @@ export function mapBillListRowToPreview(row: BillListRow): BillPreviewModel {
     total: row.total,
     totalFreight: row.totalFreight,
     isCancelled: row.isCancelled,
+    isSigned: row.isSigned,
   };
 }

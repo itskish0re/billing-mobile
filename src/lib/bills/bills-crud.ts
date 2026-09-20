@@ -83,7 +83,7 @@ export async function fetchBillList({
     .order('bill_date', { ascending: false })
     .order('bill_id', { ascending: false });
 
-  if (filterQuery) {
+  if (filterQuery?.trim()) {
     billsQuery = applyFieldFilters(billsQuery, filterQuery, BILL_FILTER_FIELDS);
   }
 
@@ -157,6 +157,7 @@ export async function fetchBillList({
       others: othersByBill.get(billId) ?? [],
       total: toNumberOrNull(row.total),
       isCancelled: row.is_cancelled === true,
+      isSigned: row.is_signed === true,
       financialYearId: toNumberOrNull(row.financial_year_id),
       loads,
     };
@@ -227,6 +228,7 @@ function billWritePayload(
       .map((item) => ({ key: item.key.trim(), value: money(item.value) })),
     total: money(computed.total),
     is_cancelled: computed.isCancelled,
+    is_signed: computed.isSigned,
     financial_year_id: financialYearId,
     updated_by: userId,
     ...(mode === 'create' ? { created_by: userId } : {}),

@@ -78,6 +78,7 @@ export function mapBillListRowToForm(row: BillListRow): BillFormValues {
     others: row.others.map((o) => createBillOtherItem(o.key, numOrEmpty(o.value))),
     total: numOrEmpty(row.total),
     isCancelled: row.isCancelled,
+    isSigned: row.isSigned,
     loads,
   });
 }

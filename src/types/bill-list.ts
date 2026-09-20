@@ -51,6 +51,7 @@ export type BillListRow = {
   others: { key: string; value: number | null }[];
   total: number | null;
   isCancelled: boolean;
+  isSigned: boolean;
   financialYearId: number | null;
   /** Sorted ascending by load number; the first entry is the primary "To". */
   loads: BillListLoad[];

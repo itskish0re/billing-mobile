@@ -77,5 +77,6 @@ export type BillFormValues = {
   others: BillOtherItem[];
   total: number | '';
   isCancelled: boolean;
+  isSigned: boolean;
   loads: BillLoadFormLine[];
 };

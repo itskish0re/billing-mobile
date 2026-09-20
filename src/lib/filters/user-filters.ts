@@ -19,7 +19,7 @@ export async function fetchUserFilter(
     .eq('entity', entity)
     .maybeSingle();
 
-  if (error) {
+  if (error && error.code !== 'PGRST116') {
     throw error;
   }
 

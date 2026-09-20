@@ -48,11 +48,11 @@ export function serializeFilterQuery(
 }
 
 export function parseFilterQuery(
-  query: string,
+  query: string | null | undefined,
   fields: QueryFilterField[]
 ): ParsedFilterQuery {
   const allowed = new Map(fields.map((field) => [field.key, field]));
-  const params = new URLSearchParams(query);
+  const params = new URLSearchParams(query ?? '');
   const clauses: QueryFilterClause[] = [];
   const seen = new Set<string>();
 
@@ -97,9 +97,9 @@ export function applyFieldFilters<
     gte: (column: string, value: string) => T;
     lte: (column: string, value: string) => T;
   },
->(query: T, filterQuery: string, fields: QueryFilterField[]): T {
+>(query: T, filterQuery: string | null | undefined, fields: QueryFilterField[]): T {
   const allowed = new Map(fields.map((field) => [field.key, field]));
-  const params = new URLSearchParams(filterQuery);
+  const params = new URLSearchParams(filterQuery ?? '');
   let next = query;
 
   for (const [key, rawValue] of params.entries()) {

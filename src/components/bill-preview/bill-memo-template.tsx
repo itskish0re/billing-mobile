@@ -1,3 +1,4 @@
+import { Image } from 'expo-image';
 import { StyleSheet, Text, View } from 'react-native';
 
 import {
@@ -9,6 +10,7 @@ import {
   formatBillPreviewWeight,
   prepareBillPreviewLoads,
 } from '@/lib/bills/bill-preview';
+import { BILL_CANCELLED_STAMP, BILL_SIGNATURE_IMAGE } from '@/lib/bills/bill-memo-images';
 import { formatTruckNumber } from '@/lib/bills/format-truck-number';
 import type { BillPreviewLoadLine, BillPreviewModel } from '@/types/bill-preview';
 
@@ -19,6 +21,10 @@ export const BILL_MEMO_HEIGHT = 1123;
 const INK = '#111';
 const BLUE = '#1a4f9c';
 const RED = '#c8232c';
+
+const BANNER_WIDTH = 300;
+const BANNER_HEIGHT = 38;
+const BANNER_SLANT = 28;
 
 /** Load-table column widths. Header, body, and footer share these percents. */
 const COL = {
@@ -44,21 +50,21 @@ type BillMemoTemplateProps = {
 function MetaField({
   label,
   value,
-  labelWidth = 108,
   valueColor = INK,
   valueBold = false,
   valueSize,
 }: {
   label: string;
   value: string;
-  labelWidth?: number;
   valueColor?: string;
   valueBold?: boolean;
   valueSize?: number;
 }) {
   return (
     <View style={styles.field}>
-      <Text style={[styles.fieldLabel, { width: labelWidth }]}>{label}</Text>
+      <Text style={styles.fieldLabel} numberOfLines={1}>
+        {label}
+      </Text>
       <Text
         style={[
           styles.fieldValue,
@@ -178,22 +184,23 @@ export function BillMemoTemplate({ data }: BillMemoTemplateProps) {
     .join(', ');
 
   return (
-    <View style={[styles.memo, data.isCancelled ? styles.memoCancelled : null]}>
+    <View style={styles.memo}>
       <View style={styles.outer}>
         {/* Top strip */}
         <View style={styles.top}>
-          <Text style={styles.motto}>{company.motto}</Text>
-          <View style={styles.bannerWrap}>
-            <View style={styles.bannerFill}>
-              <View style={styles.bannerCutLeft} />
-              <View style={styles.bannerCutRight} />
-            </View>
+          <Text style={styles.motto} numberOfLines={1}>
+            {company.motto}
+          </Text>
+          <View style={styles.banner}>
+            <View style={styles.bannerShape} />
             <View style={styles.bannerCopy}>
               <Text style={styles.bannerText}>{company.titleTop}</Text>
               <Text style={styles.bannerText}>{company.titleBottom}</Text>
             </View>
           </View>
-          <Text style={styles.phone}>{company.phone}</Text>
+          <Text style={styles.phone} numberOfLines={1}>
+            {company.phone}
+          </Text>
         </View>
 
         {/* Brand row */}
@@ -229,7 +236,6 @@ export function BillMemoTemplate({ data }: BillMemoTemplateProps) {
                 <MetaField
                   label="Memo No. :"
                   value={data.billNumber}
-                  labelWidth={72}
                   valueColor={RED}
                   valueBold
                   valueSize={15}
@@ -239,7 +245,6 @@ export function BillMemoTemplate({ data }: BillMemoTemplateProps) {
                 <MetaField
                   label="Date :"
                   value={formatBillPreviewDate(data.billDate)}
-                  labelWidth={44}
                 />
               </View>
             </View>
@@ -439,11 +444,27 @@ export function BillMemoTemplate({ data }: BillMemoTemplateProps) {
           </View>
           */}
           <View style={[styles.signatureBlock, styles.signatureBlockRight]}>
-            <View style={[styles.signatureSpace, styles.signatureSpaceRight]} />
+            <View style={[styles.signatureSpace, styles.signatureSpaceRight]}>
+              {data.isSigned ? (
+                <Image
+                  source={BILL_SIGNATURE_IMAGE}
+                  style={styles.signatureImage}
+                  contentFit="contain"
+                />
+              ) : null}
+            </View>
             <Text style={styles.signatureLabel}>{company.signatureLabel}</Text>
           </View>
         </View>
       </View>
+      {data.isCancelled ? (
+        <Image
+          source={BILL_CANCELLED_STAMP}
+          style={styles.cancelledStamp}
+          contentFit="contain"
+          pointerEvents="none"
+        />
+      ) : null}
     </View>
   );
 }
@@ -456,24 +477,34 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingTop: 10,
     paddingBottom: 12,
+    overflow: 'hidden',
   },
-  memoCancelled: {
-    opacity: 0.72,
+  cancelledStamp: {
+    position: 'absolute',
+    width: 420,
+    height: 420,
+    top: '28%',
+    left: '50%',
+    marginLeft: -210,
+    opacity: 0.38,
+    zIndex: 4,
   },
   outer: {
     flex: 1,
     borderWidth: 2,
     borderColor: INK,
     paddingHorizontal: 10,
-    paddingTop: 8,
+    paddingTop: 0,
     paddingBottom: 10,
+    overflow: 'hidden',
   },
 
   // Top strip
   top: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     justifyContent: 'space-between',
+    height: BANNER_HEIGHT,
     marginBottom: 6,
   },
   motto: {
@@ -482,47 +513,42 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: INK,
     letterSpacing: 0.5,
+    paddingTop: 10,
+    paddingRight: 6,
   },
-  bannerWrap: {
-    width: 210,
-    height: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
+  banner: {
+    width: BANNER_WIDTH,
+    height: BANNER_HEIGHT,
+    flexShrink: 0,
   },
-  bannerFill: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: BLUE,
-    overflow: 'hidden',
-  },
-  bannerCutLeft: {
+  bannerShape: {
     position: 'absolute',
-    left: -18,
-    bottom: -22,
-    width: 48,
-    height: 48,
-    backgroundColor: '#fff',
-    transform: [{ rotate: '28deg' }],
-  },
-  bannerCutRight: {
-    position: 'absolute',
-    right: -18,
-    bottom: -22,
-    width: 48,
-    height: 48,
-    backgroundColor: '#fff',
-    transform: [{ rotate: '-28deg' }],
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 0,
+    borderTopWidth: BANNER_HEIGHT,
+    borderTopColor: BLUE,
+    borderLeftWidth: BANNER_SLANT,
+    borderLeftColor: '#fff',
+    borderRightWidth: BANNER_SLANT,
+    borderRightColor: '#fff',
+    borderBottomWidth: 0,
   },
   bannerCopy: {
-    zIndex: 1,
+    ...StyleSheet.absoluteFillObject,
     alignItems: 'center',
-    paddingHorizontal: 22,
+    justifyContent: 'center',
+    paddingHorizontal: BANNER_SLANT,
   },
   bannerText: {
+    width: '100%',
     color: '#fff',
     fontWeight: '700',
-    fontSize: 12,
-    letterSpacing: 1.2,
-    lineHeight: 15,
+    fontSize: 11,
+    letterSpacing: 0.6,
+    lineHeight: 14,
+    textAlign: 'center',
   },
   phone: {
     flex: 1,
@@ -530,6 +556,8 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     fontSize: 13,
     color: INK,
+    paddingTop: 10,
+    paddingLeft: 6,
   },
 
   // Brand row
@@ -544,13 +572,17 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: INK,
     marginRight: 10,
+    flexShrink: 0,
   },
   brandCopy: {
     flex: 1,
+    minWidth: 0,
     paddingTop: 4,
+    paddingRight: 10,
   },
   companyNameRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     alignItems: 'baseline',
     marginBottom: 4,
   },
@@ -573,6 +605,7 @@ const styles = StyleSheet.create({
   },
   truckBox: {
     width: 136,
+    flexShrink: 0,
     borderWidth: 1,
     borderColor: INK,
     paddingHorizontal: 10,
@@ -606,6 +639,7 @@ const styles = StyleSheet.create({
   },
   metaHalf: {
     flex: 1,
+    minWidth: 0,
   },
   metaHalfRight: {
     borderLeftWidth: 1,
@@ -616,24 +650,28 @@ const styles = StyleSheet.create({
   },
   metaSplitHalf: {
     flex: 1,
+    minWidth: 0,
   },
   field: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 10,
+    paddingHorizontal: 8,
     paddingTop: 6,
     paddingBottom: 7,
+    minWidth: 0,
   },
   fieldLabel: {
+    flexShrink: 0,
     fontSize: 12,
     fontWeight: '600',
     color: INK,
+    marginRight: 6,
   },
   fieldValue: {
     flex: 1,
+    minWidth: 0,
     fontSize: 12,
     color: INK,
-    paddingHorizontal: 2,
   },
 
   // Loads
@@ -908,6 +946,12 @@ const styles = StyleSheet.create({
   },
   signatureSpaceRight: {
     maxWidth: 220,
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+  },
+  signatureImage: {
+    width: 200,
+    height: 48,
   },
   signatureLabel: {
     fontSize: 12,

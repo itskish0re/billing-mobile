@@ -78,4 +78,5 @@ export type BillPreviewModel = {
   total: number | null;
   totalFreight: number | null;
   isCancelled: boolean;
+  isSigned: boolean;
 };
