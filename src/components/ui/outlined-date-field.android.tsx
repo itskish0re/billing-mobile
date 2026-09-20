@@ -4,12 +4,13 @@ import {
   DatePickerDialog,
   Icon,
   Row,
+  Shape,
+  Surface,
   Text,
   useMaterialColors,
 } from '@expo/ui/jetpack-compose';
 import {
   background,
-  border,
   clickable,
   clip,
   defaultMinSize,
@@ -22,7 +23,7 @@ import {
 import { useState } from 'react';
 
 import {
-  FORM_FIELD_CORNER_RADIUS,
+  FORM_FIELD_CORNERS,
   FORM_FIELD_MIN_HEIGHT,
 } from '@/components/ui/form-fields/form-field-metrics';
 import { formatTransactionDate } from '@/lib/transactions/format-transaction-date';
@@ -78,35 +79,39 @@ export function OutlinedDateField({
       modifiers={compact ? [weight(1), fillMaxWidth()] : [fillMaxWidth()]}
       verticalArrangement={{ spacedBy: 4 }}>
       <Box modifiers={[fillMaxWidth()]}>
-        <Column
-          modifiers={[
-            fillMaxWidth(),
-            defaultMinSize({ minHeight: FORM_FIELD_MIN_HEIGHT }),
-            clip(Shapes.RoundedCorner(FORM_FIELD_CORNER_RADIUS)),
-            border(1, outline),
-            clickable(openDialog),
-            padding(16, 8, 12, 8),
-          ]}
-          verticalArrangement="center">
-          <Row verticalAlignment="center" modifiers={[fillMaxWidth()]}>
-            <Text
-              modifiers={[weight(1)]}
-              maxLines={1}
-              color={date ? colors.onSurface : colors.onSurfaceVariant}
-              style={{ typography: 'bodyLarge' }}>
-              {date ? formatTransactionDate(date) : 'Select date'}
-            </Text>
-            {date && onClear ? (
-              <Box modifiers={[clip(Shapes.Circle), clickable(onClear), padding(4, 4, 4, 4)]}>
-                <Icon source={CLOSE_ICON} size={20} tint={colors.onSurfaceVariant} />
-              </Box>
-            ) : (
-              <Box modifiers={[clip(Shapes.Circle), clickable(openDialog), padding(4, 4, 4, 4)]}>
-                <Icon source={CALENDAR_ICON} size={20} tint={colors.onSurfaceVariant} />
-              </Box>
-            )}
-          </Row>
-        </Column>
+        <Surface
+          color={colors.surface}
+          shape={Shape.RoundedCorner({ cornerRadii: FORM_FIELD_CORNERS })}
+          border={{ width: 1, color: outline }}
+          onClick={openDialog}
+          modifiers={[fillMaxWidth(), defaultMinSize({ minHeight: FORM_FIELD_MIN_HEIGHT })]}>
+          <Column
+            modifiers={[
+              fillMaxWidth(),
+              defaultMinSize({ minHeight: FORM_FIELD_MIN_HEIGHT }),
+              padding(16, 8, 16, 8),
+            ]}
+            verticalArrangement="center">
+            <Row verticalAlignment="center" modifiers={[fillMaxWidth()]}>
+              <Text
+                modifiers={[weight(1)]}
+                maxLines={1}
+                color={date ? colors.onSurface : colors.onSurfaceVariant}
+                style={{ typography: 'bodyLarge' }}>
+                {date ? formatTransactionDate(date) : 'Select date'}
+              </Text>
+              {date && onClear ? (
+                <Box modifiers={[clip(Shapes.Circle), clickable(onClear), padding(4, 4, 4, 4)]}>
+                  <Icon source={CLOSE_ICON} size={20} tint={colors.onSurfaceVariant} />
+                </Box>
+              ) : (
+                <Box modifiers={[clip(Shapes.Circle), clickable(openDialog), padding(4, 4, 4, 4)]}>
+                  <Icon source={CALENDAR_ICON} size={20} tint={colors.onSurfaceVariant} />
+                </Box>
+              )}
+            </Row>
+          </Column>
+        </Surface>
 
         <Text
           color={labelColor}

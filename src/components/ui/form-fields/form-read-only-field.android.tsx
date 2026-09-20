@@ -1,18 +1,15 @@
-import { Box, Column, Text, useMaterialColors } from '@expo/ui/jetpack-compose';
+import { Box, Column, Shape, Surface, Text, useMaterialColors } from '@expo/ui/jetpack-compose';
 import {
   background,
-  border,
-  clip,
+  defaultMinSize,
   fillMaxWidth,
-  height,
   offset,
   padding,
-  Shapes,
   weight,
 } from '@expo/ui/jetpack-compose/modifiers';
 
 import {
-  FORM_FIELD_CORNER_RADIUS,
+  FORM_FIELD_CORNERS,
   FORM_FIELD_MIN_HEIGHT,
 } from '@/components/ui/form-fields/form-field-metrics';
 
@@ -27,9 +24,8 @@ export type FormReadOnlyFieldProps = {
 };
 
 /**
- * Display-only outlined field. Uses a fixed 56dp frame (same as
- * `OutlinedTextField`) so compact rows stay aligned. Values are Compose
- * `Text` — Expo's `TextFieldView.setText` crashes on Android.
+ * Display-only outlined field. Uses the same 56dp min height and 12dp
+ * `Surface` corners as `OutlinedTextField` so compact rows stay aligned.
  */
 export function FormReadOnlyField({
   label,
@@ -40,7 +36,6 @@ export function FormReadOnlyField({
   monospace,
 }: FormReadOnlyFieldProps) {
   const colors = useMaterialColors();
-  const outline = colors.outline;
   const valueColor = highlighted
     ? colors.primary
     : value
@@ -52,28 +47,33 @@ export function FormReadOnlyField({
     <Column
       modifiers={compact ? [weight(1), fillMaxWidth()] : [fillMaxWidth()]}
       verticalArrangement={{ spacedBy: 4 }}>
-      <Box modifiers={[fillMaxWidth(), height(FORM_FIELD_MIN_HEIGHT)]}>
-        <Column
-          modifiers={[
-            fillMaxWidth(),
-            height(FORM_FIELD_MIN_HEIGHT),
-            clip(Shapes.RoundedCorner(FORM_FIELD_CORNER_RADIUS)),
-            border(1, outline),
-            padding(16, 8, 12, 8),
-          ]}
-          verticalArrangement="center">
-          <Text
-            maxLines={1}
-            overflow="ellipsis"
-            color={valueColor}
-            modifiers={[fillMaxWidth()]}
-            style={{
-              typography: longValue || compact ? 'bodyMedium' : 'bodyLarge',
-              ...(monospace ? { fontFamily: 'monospace', letterSpacing: 1 } : {}),
-            }}>
-            {value || ' '}
-          </Text>
-        </Column>
+      <Box modifiers={[fillMaxWidth(), defaultMinSize({ minHeight: FORM_FIELD_MIN_HEIGHT })]}>
+        <Surface
+          color={colors.surface}
+          contentColor={valueColor}
+          shape={Shape.RoundedCorner({ cornerRadii: FORM_FIELD_CORNERS })}
+          border={{ width: 1, color: colors.outline }}
+          modifiers={[fillMaxWidth(), defaultMinSize({ minHeight: FORM_FIELD_MIN_HEIGHT })]}>
+          <Column
+            modifiers={[
+              fillMaxWidth(),
+              defaultMinSize({ minHeight: FORM_FIELD_MIN_HEIGHT }),
+              padding(16, 8, 16, 8),
+            ]}
+            verticalArrangement="center">
+            <Text
+              maxLines={1}
+              overflow="ellipsis"
+              color={valueColor}
+              modifiers={[fillMaxWidth()]}
+              style={{
+                typography: longValue || compact ? 'bodyMedium' : 'bodyLarge',
+                ...(monospace ? { fontFamily: 'monospace', letterSpacing: 1 } : {}),
+              }}>
+              {value || ' '}
+            </Text>
+          </Column>
+        </Surface>
 
         <Text
           color={colors.onSurfaceVariant}

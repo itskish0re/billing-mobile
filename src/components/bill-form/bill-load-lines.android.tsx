@@ -307,7 +307,10 @@ export function BillLoadLines({ loads, onChange, onCreateMaster }: BillLoadLines
               }}
             />
 
-            <Row horizontalArrangement={{ spacedBy: 8 }} modifiers={[fillMaxWidth()]}>
+            <Row
+              verticalAlignment="center"
+              horizontalArrangement={{ spacedBy: 8 }}
+              modifiers={[fillMaxWidth()]}>
               <FormNumericField
                 key={`${line.loadNumber}-weight`}
                 label="Weight / Qty"
@@ -326,7 +329,10 @@ export function BillLoadLines({ loads, onChange, onCreateMaster }: BillLoadLines
               />
             </Row>
 
-            <Row horizontalArrangement={{ spacedBy: 8 }} modifiers={[fillMaxWidth()]}>
+            <Row
+              verticalAlignment="center"
+              horizontalArrangement={{ spacedBy: 8 }}
+              modifiers={[fillMaxWidth()]}>
               <FormReadOnlyField
                 label="Freight"
                 compact
@@ -345,7 +351,10 @@ export function BillLoadLines({ loads, onChange, onCreateMaster }: BillLoadLines
               />
             </Row>
 
-            <Row horizontalArrangement={{ spacedBy: 8 }} modifiers={[fillMaxWidth()]}>
+            <Row
+              verticalAlignment="center"
+              horizontalArrangement={{ spacedBy: 8 }}
+              modifiers={[fillMaxWidth()]}>
               <FormNumericField
                 key={`${line.loadNumber}-topay`}
                 label="To Pay"

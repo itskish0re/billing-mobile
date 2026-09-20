@@ -5,9 +5,12 @@ import type {
   TextFieldCapitalization,
   TextFieldTextStyle,
 } from '@expo/ui/jetpack-compose';
-import { fillMaxWidth, weight } from '@expo/ui/jetpack-compose/modifiers';
+import { defaultMinSize, fillMaxWidth, weight } from '@expo/ui/jetpack-compose/modifiers';
 
-import { FORM_FIELD_CORNERS } from '@/components/ui/form-fields/form-field-metrics';
+import {
+  FORM_FIELD_CORNERS,
+  FORM_FIELD_MIN_HEIGHT,
+} from '@/components/ui/form-fields/form-field-metrics';
 
 export type FormTextFieldProps = {
   label: string;
@@ -60,7 +63,7 @@ export function FormTextField({
         shape={Shape.RoundedCorner({ cornerRadii: FORM_FIELD_CORNERS })}
         keyboardOptions={{ keyboardType, capitalization, imeAction }}
         keyboardActions={{ onDone: () => onSubmit?.() }}
-        modifiers={[fillMaxWidth()]}
+        modifiers={[fillMaxWidth(), defaultMinSize({ minHeight: FORM_FIELD_MIN_HEIGHT })]}
         onValueChange={onChangeText}>
         <OutlinedTextField.Label>
           <Text>

@@ -275,6 +275,7 @@ export function BillsList({
       onRefresh={() => {
         void handleRefresh();
       }}
+      contentAlignment="topCenter"
       indicator={{ modifiers: [align('topCenter')] }}
       modifiers={[fillMaxWidth(), fillMaxSize(), weight(1)]}>
       {body}
