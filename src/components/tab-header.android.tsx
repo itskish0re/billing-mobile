@@ -1,10 +1,9 @@
 import { Column, HorizontalDivider, Text, useMaterialColors } from '@expo/ui/jetpack-compose';
 import { background, fillMaxWidth, padding } from '@expo/ui/jetpack-compose/modifiers';
-import * as SystemUI from 'expo-system-ui';
-import { useEffect } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { APP_NAME } from '@/constants/brand';
+import { useThemedStatusBar } from '@/components/themed-status-bar';
 import { useAppStore } from '@/stores/app-store';
 
 export function TabHeader() {
@@ -14,10 +13,7 @@ export function TabHeader() {
   const headerColor = colors.secondaryContainer;
   const titleColor = colors.onSecondaryContainer;
   const subtitle = financialYearLabel ?? 'No financial year selected';
-
-  useEffect(() => {
-    SystemUI.setBackgroundColorAsync(headerColor).catch(() => undefined);
-  }, [headerColor]);
+  useThemedStatusBar(headerColor);
 
   return (
     <Column modifiers={[fillMaxWidth(), background(headerColor)]}>

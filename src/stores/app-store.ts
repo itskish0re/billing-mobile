@@ -16,7 +16,7 @@ type AppState = {
 export const useAppStore = create<AppState>()(
   persist(
     (set) => ({
-      themeMode: 'system',
+      themeMode: 'light',
       activeFinancialYearId: null,
       activeFinancialYearLabel: null,
       setThemeMode: (themeMode) => set({ themeMode }),

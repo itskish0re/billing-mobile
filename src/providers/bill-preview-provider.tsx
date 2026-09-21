@@ -20,6 +20,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BillPreviewCanvas } from '@/components/bill-preview/bill-preview-canvas';
+import { ThemedStatusBar } from '@/components/themed-status-bar';
 import { TabChrome } from '@/constants/brand';
 import { useResolvedColorScheme } from '@/hooks/use-resolved-color-scheme';
 import { SnackbarHost } from '@/providers/snackbar-provider';
@@ -119,6 +120,7 @@ export function BillPreviewProvider({ children }: { children: ReactNode }) {
         // Intentionally a no-op: the sheet only closes via the header close button.
         onRequestClose={() => undefined}>
         <View style={styles.root}>
+          {data ? <ThemedStatusBar backgroundColor={chrome.headerBackground} /> : null}
           <Animated.View style={[styles.backdrop, { opacity: fade }]} />
           <Animated.View
             style={[

@@ -1,11 +1,10 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { StatusBar } from 'expo-status-bar';
-import * as SystemUI from 'expo-system-ui';
 import { useEffect } from 'react';
 import AppTabs from '@/components/app-tabs';
 import { LoginScreen } from '@/components/login-screen';
 import { OfflineGate } from '@/components/offline-gate';
+import { ThemedStatusBar } from '@/components/themed-status-bar';
 import { TabChrome } from '@/constants/brand';
 import { Colors } from '@/constants/theme';
 import { useNetworkStatus } from '@/hooks/use-network-status';
@@ -23,11 +22,7 @@ function RootNavigator() {
   const { session, isLoading } = useAuth();
   const isAppReady = !isChecking && (isOffline || !isLoading);
   const chrome = TabChrome[scheme];
-  const statusBarBackground = session ? chrome.statusBar : colors.background;
-
-  useEffect(() => {
-    SystemUI.setBackgroundColorAsync(statusBarBackground).catch(() => undefined);
-  }, [statusBarBackground]);
+  const statusBarBackground = session ? chrome.statusBar : chrome.contentBackground;
 
   useEffect(() => {
     if (isAppReady) {
@@ -52,7 +47,7 @@ function RootNavigator() {
           primary: colors.text,
         },
       }}>
-      <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
+      <ThemedStatusBar backgroundColor={statusBarBackground} />
       <OfflineGate>
         {isLoading ? null : session ? <AppTabs /> : <LoginScreen />}
       </OfflineGate>

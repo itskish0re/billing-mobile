@@ -5,6 +5,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from 'react';
@@ -28,6 +29,8 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { isOffline, isChecking } = useNetworkStatus();
+  const isOfflineRef = useRef(isOffline);
+  isOfflineRef.current = isOffline;
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -63,17 +66,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    if (isOffline) {
-      setIsLoading(false);
-      return;
-    }
-
     let isMounted = true;
-    setIsLoading(true);
 
-    supabase.auth
-      .getSession()
-      .then(async ({ data: { session: initialSession } }) => {
+    const restoreSession = async () => {
+      if (isOfflineRef.current) {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+        return;
+      }
+
+      try {
+        const {
+          data: { session: initialSession },
+        } = await supabase.auth.getSession();
+
         if (!isMounted) {
           return;
         }
@@ -83,20 +90,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (initialSession?.user) {
           await loadProfile(initialSession.user.id);
         }
-      })
-      .catch(() => {
+      } catch {
         // Keep any locally restored session on transient network failures.
-      })
-      .finally(() => {
+      } finally {
         if (isMounted) {
           setIsLoading(false);
         }
-      });
+      }
+    };
+
+    void restoreSession();
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (_event, nextSession) => {
-      if (!isMounted || isOffline) {
+      if (!isMounted || isOfflineRef.current) {
         return;
       }
 
@@ -119,7 +127,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isMounted = false;
       subscription.unsubscribe();
     };
-  }, [isChecking, isOffline, loadProfile]);
+  }, [isChecking, loadProfile]);
 
   const signIn = useCallback(
     async (email: string, password: string) => {

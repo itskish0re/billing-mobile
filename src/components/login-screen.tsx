@@ -1,15 +1,21 @@
 import { Button, Column, Host, Text, TextInput } from '@expo/ui';
+import { Image } from 'expo-image';
 import { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { APP_NAME, BRAND_SEED_COLOR, TabChrome } from '@/constants/brand';
+import { ThemedStatusBar } from '@/components/themed-status-bar';
 import { useLoginForm } from '@/hooks/use-login-form';
 import { useResolvedColorScheme } from '@/hooks/use-resolved-color-scheme';
+import { useSnackbar } from '@/providers/snackbar-provider';
+
+const LOGO_MARK = require('@/assets/images/logo-mark.png');
 
 export function LoginScreen() {
   const scheme = useResolvedColorScheme();
   const chrome = TabChrome[scheme];
+  const { showSnackbar } = useSnackbar();
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const {
     email,
@@ -21,12 +27,32 @@ export function LoginScreen() {
     clearFieldError,
   } = useLoginForm();
 
+  const showAdminHelp = () => {
+    void showSnackbar('Contact your admin for access or a password reset.', { variant: 'success' });
+  };
+
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: chrome.contentBackground }]}>
+      <ThemedStatusBar backgroundColor={chrome.contentBackground} />
+      <Image
+        source={LOGO_MARK}
+        style={styles.watermark}
+        contentFit="contain"
+        tintColor={chrome.onHeader}
+      />
       <Host key={scheme} style={styles.host} seedColor={BRAND_SEED_COLOR} colorScheme={scheme}>
-        <Column spacing={20} style={styles.column}>
-          <Column spacing={6}>
-            <Text textStyle={styles.brandTitle}>{APP_NAME}</Text>
+        <Column spacing={28} style={styles.column}>
+          <Column spacing={8}>
+            <Image
+              source={LOGO_MARK}
+              style={styles.hero}
+              contentFit="contain"
+              tintColor={chrome.onHeader}
+            />
+            <Text textStyle={{ ...styles.brandTitle, color: chrome.onHeader }}>
+              {APP_NAME.toUpperCase()}
+            </Text>
+            <Text textStyle={{ ...styles.secureAccess, color: chrome.onHeader }}>SECURE ACCESS</Text>
             <Text textStyle={{ ...styles.brandSubtitle, color: chrome.onHeaderMuted }}>
               Sign in with your admin-created account
             </Text>
@@ -92,6 +118,15 @@ export function LoginScreen() {
                 onPress={handleSignIn}
                 disabled={isSubmitting}
               />
+
+              <Pressable onPress={showAdminHelp} disabled={isSubmitting}>
+                <Text textStyle={{ ...styles.help, color: chrome.onHeaderMuted }}>Forgot password?</Text>
+              </Pressable>
+              <Pressable onPress={showAdminHelp} disabled={isSubmitting}>
+                <Text textStyle={{ ...styles.help, color: chrome.onHeaderMuted }}>
+                  Need help? Contact admin
+                </Text>
+              </Pressable>
             </Column>
           </View>
         </Column>
@@ -107,26 +142,41 @@ const styles = StyleSheet.create({
   host: {
     flex: 1,
   },
+  watermark: {
+    position: 'absolute',
+    top: 24,
+    right: -24,
+    width: 280,
+    height: 280,
+    opacity: 0.08,
+  },
   column: {
     flex: 1,
     justifyContent: 'center',
-    paddingHorizontal: 12,
+    paddingHorizontal: 24,
+  },
+  hero: {
+    width: 148,
+    height: 148,
+    alignSelf: 'center',
   },
   brandTitle: {
-    color: '#9A6B43',
-    fontSize: 40,
+    fontSize: 28,
     fontWeight: '700',
-    letterSpacing: 0.5,
+    letterSpacing: 3,
+    textAlign: 'center',
+  },
+  secureAccess: {
+    fontSize: 13,
+    fontWeight: '600',
+    letterSpacing: 3,
     textAlign: 'center',
   },
   brandSubtitle: {
-    color: '#60646C',
     fontSize: 15,
     textAlign: 'center',
   },
   card: {
-    backgroundColor: '#ffffff',
-    borderColor: '#E0E1E6',
     borderRadius: 16,
     borderWidth: 1,
     padding: 20,
@@ -144,6 +194,10 @@ const styles = StyleSheet.create({
   },
   passwordInputWrap: {
     flex: 1,
+  },
+  help: {
+    fontSize: 13,
+    textAlign: 'center',
   },
   fieldError: {
     color: '#b91c1c',

@@ -9,14 +9,11 @@ import {
   createContext,
   useCallback,
   useContext,
-  useEffect,
   useMemo,
   useRef,
   useState,
   type ReactNode,
 } from 'react';
-import { StatusBar } from 'expo-status-bar';
-import * as SystemUI from 'expo-system-ui';
 import { Modal, StyleSheet, View } from 'react-native';
 import {
   initialWindowMetrics,
@@ -25,6 +22,7 @@ import {
 } from 'react-native-safe-area-context';
 
 import { BillFormPanel } from '@/components/bill-form/bill-form-panel';
+import { ThemedStatusBar } from '@/components/themed-status-bar';
 import { BRAND_SEED_COLOR, TabChrome } from '@/constants/brand';
 import { useResolvedColorScheme } from '@/hooks/use-resolved-color-scheme';
 import { SnackbarHost } from '@/providers/snackbar-provider';
@@ -115,14 +113,6 @@ export function BillFormProvider({ children }: { children: ReactNode }) {
     }, EXIT_MS);
   }, [clearExitTimer, isOpen]);
 
-  useEffect(() => {
-    if (!modalVisible) {
-      return;
-    }
-
-    SystemUI.setBackgroundColorAsync(chrome.statusBar).catch(() => undefined);
-  }, [chrome.statusBar, modalVisible]);
-
   const value = useMemo(
     () => ({
       isOpen,
@@ -145,7 +135,7 @@ export function BillFormProvider({ children }: { children: ReactNode }) {
         onRequestClose={close}>
         <SafeAreaProvider initialMetrics={initialWindowMetrics}>
           <View style={[styles.modalRoot, { backgroundColor: chrome.statusBar }]}>
-            <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
+            <ThemedStatusBar backgroundColor={chrome.statusBar} />
             <Host style={styles.host} seedColor={BRAND_SEED_COLOR} colorScheme={scheme}>
               <AnimatedVisibility
                 visible={isOpen}
