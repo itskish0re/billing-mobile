@@ -27,7 +27,7 @@ import { useState } from 'react';
 import { StyleSheet } from 'react-native';
 
 import { BILL_CANCELLED_STAMP } from '@/lib/bills/bill-memo-images';
-import { mapBillListRowToPreview } from '@/lib/bills/bill-preview';
+import { formatBillPreviewDate, mapBillListRowToPreview } from '@/lib/bills/bill-preview';
 import { formatTruckNumber } from '@/lib/bills/format-truck-number';
 import { shareBillPdf } from '@/lib/bills/share-bill-pdf';
 import { useBillsList } from '@/hooks/use-bills-list';
@@ -102,6 +102,7 @@ function BillListCard({
   const colors = useMaterialColors();
   const firstTo = row.loads[0]?.toLocationName ?? '';
   const formattedTruck = formatTruckNumber(row.truckNumber);
+  const formattedDate = formatBillPreviewDate(row.billDate);
   const route = `${row.fromLocationName || '—'} → ${firstTo || '—'}`;
 
   return (
@@ -113,17 +114,25 @@ function BillListCard({
         <Column
           modifiers={[fillMaxWidth(), padding(12, 8, 12, 8)]}
           verticalArrangement={{ spacedBy: 2 }}>
-          <Row modifiers={[fillMaxWidth()]} verticalAlignment="center" horizontalArrangement="spaceBetween">
-            <Box
-              modifiers={[
-                clip(Shapes.RoundedCorner(6)),
-                background(colors.primary),
-                padding(6, 2, 6, 2),
-              ]}>
-              <Text color={colors.onPrimary} style={{ typography: 'labelMedium' }}>
-                {row.billNumber ? `BILL ${row.billNumber}` : 'BILL'}
-              </Text>
-            </Box>
+          <Row modifiers={[fillMaxWidth()]} verticalAlignment="center">
+            <Row modifiers={[weight(1)]} verticalAlignment="center">
+              <Box
+                modifiers={[
+                  clip(Shapes.RoundedCorner(6)),
+                  background(colors.primary),
+                  padding(6, 2, 6, 2),
+                ]}>
+                <Text color={colors.onPrimary} style={{ typography: 'labelMedium' }}>
+                  {row.billNumber ? `BILL ${row.billNumber}` : 'BILL'}
+                </Text>
+              </Box>
+            </Row>
+            <Text
+              maxLines={1}
+              color={colors.onSurface}
+              style={{ typography: 'labelLarge' }}>
+              {formattedDate || '—'}
+            </Text>
             <Text
               modifiers={[weight(1)]}
               maxLines={1}

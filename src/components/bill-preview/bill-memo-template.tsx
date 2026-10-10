@@ -7,6 +7,7 @@ import {
   formatBillPreviewAmount,
   formatBillPreviewConsigneeName,
   formatBillPreviewDate,
+  formatBillPreviewMoney,
   formatBillPreviewWeight,
   prepareBillPreviewLoads,
 } from '@/lib/bills/bill-preview';
@@ -34,18 +35,18 @@ const BANNER_SLANT = 28;
 
 /** Load-table column widths. Header, body, and footer share these percents. */
 const COL = {
-  sno: '4%',
+  sno: '6%',
   consignor: '10%',
   consignee: '12%',
-  goods: '8%',
-  weight: '11%',
+  goods: '7%',
+  weight: '10%',
   rate: '7.8%',
   num: '11.8%',
 } as const;
 
 const FOOT = {
-  truckLoan: '26%',
-  totalFreight: '38.6%',
+  truckLoan: '28%',
+  totalFreight: '36.6%',
   empty: '35.4%',
 } as const;
 
@@ -58,13 +59,17 @@ function MetaField({
   value,
   valueColor = INK,
   valueBold = false,
+  valueHeavy = false,
   valueSize,
+  valueAlign = 'left',
 }: {
   label: string;
   value: string;
   valueColor?: string;
   valueBold?: boolean;
+  valueHeavy?: boolean;
   valueSize?: number;
+  valueAlign?: 'left' | 'center';
 }) {
   return (
     <View style={styles.field}>
@@ -76,7 +81,9 @@ function MetaField({
           styles.fieldValue,
           { color: valueColor },
           valueBold ? styles.bold : null,
+          valueHeavy ? styles.heavy : null,
           valueSize ? { fontSize: valueSize } : null,
+          valueAlign === 'center' ? styles.fieldValueCenter : null,
         ]}
         numberOfLines={1}>
         {value}
@@ -89,13 +96,13 @@ function LoadCell({
   width,
   children,
   last = false,
-  left = false,
+  align = 'center',
   style,
 }: {
   width: string;
   children?: React.ReactNode;
   last?: boolean;
-  left?: boolean;
+  align?: 'start' | 'center' | 'end';
   style?: object;
 }) {
   return (
@@ -104,7 +111,8 @@ function LoadCell({
         styles.loadCell,
         { width },
         last ? null : styles.cellBorderRight,
-        left ? styles.cellLeft : null,
+        align === 'start' ? styles.cellStart : null,
+        align === 'end' ? styles.cellEnd : null,
         style,
       ]}>
       {children}
@@ -121,11 +129,13 @@ function LoadRow({ row, last }: { row: BillPreviewLoadLine; last?: boolean }) {
       <LoadCell width={COL.sno}>
         <Text style={styles.loadSno}>{row.loadNumber}</Text>
       </LoadCell>
-      <LoadCell width={COL.consignor} left>
-        <Text style={styles.loadText}>{row.consignorName}</Text>
+      <LoadCell width={COL.consignor} style={styles.partyCell}>
+        <Text style={[styles.loadText, styles.partyText]}>{row.consignorName}</Text>
       </LoadCell>
-      <LoadCell width={COL.consignee} left>
-        <Text style={[styles.loadText, row.asPerBill ? styles.apb : null]}>{consigneeName}</Text>
+      <LoadCell width={COL.consignee} style={styles.partyCell}>
+        <Text style={[styles.loadText, styles.partyText, row.asPerBill ? styles.apb : null]}>
+          {consigneeName}
+        </Text>
         {to ? <Text style={styles.consigneeTo}>To: {to}</Text> : null}
       </LoadCell>
       <LoadCell width={COL.goods}>
@@ -142,17 +152,19 @@ function LoadRow({ row, last }: { row: BillPreviewLoadLine; last?: boolean }) {
           ) : null}
         </Text>
       </LoadCell>
-      <LoadCell width={COL.num}>
-        <Text style={styles.loadText}>{formatBillPreviewAmount(row.freight)}</Text>
+      <LoadCell width={COL.num} align="end" style={styles.freightCell}>
+        <Text style={[styles.loadText, styles.loadTextEnd]}>
+          {formatBillPreviewMoney(row.freight)}
+        </Text>
       </LoadCell>
       <LoadCell width={COL.num}>
-        <Text style={styles.loadText}>{formatBillPreviewAmount(row.advance)}</Text>
+        <Text style={styles.loadText}>{formatBillPreviewMoney(row.advance)}</Text>
       </LoadCell>
       <LoadCell width={COL.num}>
-        <Text style={styles.loadText}>{formatBillPreviewAmount(row.topay)}</Text>
+        <Text style={styles.loadText}>{formatBillPreviewMoney(row.topay)}</Text>
       </LoadCell>
       <LoadCell width={COL.num} last>
-        <Text style={styles.loadText}>{formatBillPreviewAmount(row.balance)}</Text>
+        <Text style={styles.loadText}>{formatBillPreviewMoney(row.balance)}</Text>
       </LoadCell>
     </View>
   );
@@ -249,6 +261,7 @@ export function BillMemoTemplate({ data }: BillMemoTemplateProps) {
                   valueColor={RED}
                   valueBold
                   valueSize={15}
+                  valueAlign="center"
                 />
               </View>
               <View style={[styles.metaSplitHalf, styles.metaHalfRight]}>
@@ -280,7 +293,7 @@ export function BillMemoTemplate({ data }: BillMemoTemplateProps) {
               <MetaField label="Driver Mobile :" value={driverMobiles} />
             </View>
             <View style={[styles.metaHalf, styles.metaHalfRight]}>
-              <MetaField label="Name Board :" value={data.nameBoardName} />
+              <MetaField label="Name Board :" value={data.nameBoardName} valueHeavy />
             </View>
           </View>
         </View>
@@ -291,11 +304,11 @@ export function BillMemoTemplate({ data }: BillMemoTemplateProps) {
             <LoadCell width={COL.sno}>
               <Text style={styles.headText}>S. No.</Text>
             </LoadCell>
-            <LoadCell width={COL.consignor}>
-              <Text style={styles.headText}>Consignor</Text>
+            <LoadCell width={COL.consignor} style={styles.partyCell}>
+              <Text style={[styles.headText, styles.partyText]}>Consignor</Text>
             </LoadCell>
-            <LoadCell width={COL.consignee}>
-              <Text style={styles.headText}>Consignee</Text>
+            <LoadCell width={COL.consignee} style={styles.partyCell}>
+              <Text style={[styles.headText, styles.partyText]}>Consignee</Text>
             </LoadCell>
             <LoadCell width={COL.goods}>
               <Text style={styles.headText}>Goods</Text>
@@ -336,7 +349,7 @@ export function BillMemoTemplate({ data }: BillMemoTemplateProps) {
                 Truck Loan
               </Text>
               <Text style={styles.footValue} numberOfLines={1}>
-                {data.truckLoan ? formatBillPreviewAmount(data.total) : ''}
+                {data.truckLoan ? formatBillPreviewMoney(data.total) : ''}
               </Text>
             </View>
             <View style={[styles.footCell, styles.footInline, { width: FOOT.totalFreight }]}>
@@ -344,7 +357,7 @@ export function BillMemoTemplate({ data }: BillMemoTemplateProps) {
                 Total Freight
               </Text>
               <Text style={styles.footValue} numberOfLines={1}>
-                {formatBillPreviewAmount(data.totalFreight)}
+                {formatBillPreviewMoney(data.totalFreight)}
               </Text>
             </View>
             <View style={[styles.footCell, styles.footCellLast, { width: FOOT.empty }]} />
@@ -416,7 +429,7 @@ export function BillMemoTemplate({ data }: BillMemoTemplateProps) {
                   <SummaryRow
                     key={row.key}
                     label={row.label}
-                    value={formatBillPreviewAmount(row.value)}
+                    value={formatBillPreviewMoney(row.value)}
                     total={row.key === 'total'}
                   />
                 ))}
@@ -429,15 +442,15 @@ export function BillMemoTemplate({ data }: BillMemoTemplateProps) {
                 <View style={styles.sumTable}>
                   <SummaryRow
                     label="Advance"
-                    value={formatBillPreviewAmount(data.advanceSummary.advance)}
+                    value={formatBillPreviewMoney(data.advanceSummary.advance)}
                   />
                   <SummaryRow
                     label="Commission"
-                    value={formatBillPreviewAmount(data.advanceSummary.commission)}
+                    value={formatBillPreviewMoney(data.advanceSummary.commission)}
                   />
                   <SummaryRow
                     label="Balance"
-                    value={formatBillPreviewAmount(data.advanceSummary.balance)}
+                    value={formatBillPreviewMoney(data.advanceSummary.balance)}
                   />
                 </View>
               </View>
@@ -482,7 +495,7 @@ export function BillMemoTemplate({ data }: BillMemoTemplateProps) {
 const styles = StyleSheet.create({
   memo: {
     width: BILL_MEMO_WIDTH,
-    minHeight: BILL_MEMO_HEIGHT,
+    height: BILL_MEMO_HEIGHT,
     backgroundColor: PAPER,
     paddingHorizontal: 12,
     paddingTop: 10,
@@ -628,8 +641,12 @@ const styles = StyleSheet.create({
   },
   truckBoxValue: {
     marginTop: 8,
-    fontSize: 12,
+    fontSize: 14,
+    fontWeight: '900',
     color: INK,
+    textShadowColor: INK,
+    textShadowOffset: { width: 0.6, height: 0 },
+    textShadowRadius: 0.5,
   },
 
   // Meta
@@ -681,6 +698,9 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: INK,
   },
+  fieldValueCenter: {
+    textAlign: 'center',
+  },
 
   // Loads
   loadsSection: {
@@ -723,14 +743,31 @@ const styles = StyleSheet.create({
     borderRightWidth: 1,
     borderRightColor: INK,
   },
-  cellLeft: {
+  cellStart: {
     alignItems: 'flex-start',
+  },
+  cellEnd: {
+    alignItems: 'flex-end',
   },
   loadText: {
     fontSize: 11,
     color: INK,
     textAlign: 'center',
     lineHeight: 15,
+  },
+  loadTextEnd: {
+    width: '100%',
+    textAlign: 'right',
+  },
+  freightCell: {
+    paddingHorizontal: 8,
+  },
+  partyCell: {
+    paddingHorizontal: 6,
+  },
+  partyText: {
+    width: '100%',
+    textAlign: 'center',
   },
   loadSno: {
     fontSize: 10,
@@ -748,10 +785,12 @@ const styles = StyleSheet.create({
     letterSpacing: 0.6,
   },
   consigneeTo: {
+    width: '100%',
     fontSize: 9,
     fontWeight: '500',
     color: INK,
     marginTop: 2,
+    textAlign: 'center',
   },
 
   loadsFoot: {
@@ -933,11 +972,19 @@ const styles = StyleSheet.create({
   bold: {
     fontWeight: '700',
   },
+  heavy: {
+    fontWeight: '900',
+    fontSize: 13,
+    textShadowColor: INK,
+    textShadowOffset: { width: 0.6, height: 0 },
+    textShadowRadius: 0.5,
+  },
 
   // Signatures
   signatures: {
     flexDirection: 'row',
-    marginTop: 24,
+    marginTop: 'auto',
+    paddingTop: 24,
   },
   signatureBlock: {
     flex: 1,

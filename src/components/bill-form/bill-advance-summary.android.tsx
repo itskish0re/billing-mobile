@@ -2,7 +2,6 @@ import { Column, Row, Text, useMaterialColors } from '@expo/ui/jetpack-compose';
 import { background, clip, fillMaxWidth, padding, Shapes, weight } from '@expo/ui/jetpack-compose/modifiers';
 
 import {
-  formatBillFormAmount,
   formatBillFormCurrency,
   sumLoadAdvances,
   toFormNumber,
@@ -28,7 +27,7 @@ export function BillAdvanceSummary({ values }: BillAdvanceSummaryProps) {
           style={{ typography: 'bodySmall' }}>
           Total Advance
         </Text>
-        <Text style={{ typography: 'bodyMedium' }}>{formatBillFormAmount(totalAdvance)}</Text>
+        <Text style={{ typography: 'bodyMedium' }}>{formatBillFormCurrency(totalAdvance)}</Text>
       </Row>
 
       <Row verticalAlignment="center" modifiers={[fillMaxWidth()]}>

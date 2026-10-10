@@ -11,16 +11,32 @@ export type BillMemoImageUris = {
   logo?: string;
 };
 
+function isReadableFileUri(uri: string | null | undefined): uri is string {
+  return (
+    typeof uri === 'string' &&
+    uri.startsWith('file://') &&
+    !uri.startsWith('file:///android_res/')
+  );
+}
+
 async function assetToDataUri(moduleId: number): Promise<string | undefined> {
   try {
     const asset = Asset.fromModule(moduleId);
+    // Release Android images resolve to drawable names (no scheme). Asset marks
+    // those as downloaded so Image can use them, but File cannot read them.
+    // Force a copy into the cache as a real file:// URI first.
+    if (!isReadableFileUri(asset.localUri)) {
+      asset.localUri = null;
+      asset.downloaded = false;
+    }
     await asset.downloadAsync();
-    const uri = asset.localUri ?? asset.uri;
-    if (!uri) {
+    const uri = asset.localUri;
+    if (!isReadableFileUri(uri)) {
       return undefined;
     }
     const base64 = await new File(uri).base64();
-    return `data:image/png;base64,${base64}`;
+    const mime = asset.type === 'jpg' || asset.type === 'jpeg' ? 'image/jpeg' : 'image/png';
+    return `data:${mime};base64,${base64}`;
   } catch {
     return undefined;
   }

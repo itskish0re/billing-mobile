@@ -4,6 +4,7 @@ import {
   formatBillPreviewAmount,
   formatBillPreviewConsigneeName,
   formatBillPreviewDate,
+  formatBillPreviewMoney,
   formatBillPreviewWeight,
   prepareBillPreviewLoads,
 } from '@/lib/bills/bill-preview';
@@ -55,8 +56,8 @@ export function buildBillMemoHtml(
       const unit = row.unitName?.trim();
       return `<tr>
         <td class="c-sno">${row.loadNumber}</td>
-        <td class="left">${text(row.consignorName)}</td>
-        <td class="left">${row.asPerBill ? `<span class="apb">${text(consignee)}</span>` : text(consignee)}${
+        <td class="party">${text(row.consignorName)}</td>
+        <td class="party">${row.asPerBill ? `<span class="apb">${text(consignee)}</span>` : text(consignee)}${
           to ? `<div class="to">To: ${text(to)}</div>` : ''
         }</td>
         <td>${text(row.goodsName)}</td>
@@ -64,10 +65,10 @@ export function buildBillMemoHtml(
         <td>${text(formatBillPreviewAmount(row.ratePerUnit))}${
           unit ? ` <span class="unit">${text(unit)}</span>` : ''
         }</td>
-        <td>${text(formatBillPreviewAmount(row.freight))}</td>
-        <td>${text(formatBillPreviewAmount(row.advance))}</td>
-        <td>${text(formatBillPreviewAmount(row.topay))}</td>
-        <td>${text(formatBillPreviewAmount(row.balance))}</td>
+        <td class="freight">${text(formatBillPreviewMoney(row.freight))}</td>
+        <td>${text(formatBillPreviewMoney(row.advance))}</td>
+        <td>${text(formatBillPreviewMoney(row.topay))}</td>
+        <td>${text(formatBillPreviewMoney(row.balance))}</td>
       </tr>`;
     })
     .join('');
@@ -76,7 +77,7 @@ export function buildBillMemoHtml(
     .map(
       (row) => `<tr class="${row.key === 'total' ? 'total' : ''}">
         <td>${text(row.label)}</td>
-        <td class="num">${text(formatBillPreviewAmount(row.value))}</td>
+        <td class="num">${text(formatBillPreviewMoney(row.value))}</td>
       </tr>`
     )
     .join('');
@@ -101,9 +102,9 @@ export function buildBillMemoHtml(
   const advanceBlock = data.advanceSummary
     ? `<h3>Advance Summary</h3>
       <table class="sum">
-        <tr><td>Advance</td><td class="num">${text(formatBillPreviewAmount(data.advanceSummary.advance))}</td></tr>
-        <tr><td>Commission</td><td class="num">${text(formatBillPreviewAmount(data.advanceSummary.commission))}</td></tr>
-        <tr><td>Balance</td><td class="num">${text(formatBillPreviewAmount(data.advanceSummary.balance))}</td></tr>
+        <tr><td>Advance</td><td class="num">${text(formatBillPreviewMoney(data.advanceSummary.advance))}</td></tr>
+        <tr><td>Commission</td><td class="num">${text(formatBillPreviewMoney(data.advanceSummary.commission))}</td></tr>
+        <tr><td>Balance</td><td class="num">${text(formatBillPreviewMoney(data.advanceSummary.balance))}</td></tr>
       </table>`
     : '';
 
@@ -119,16 +120,28 @@ export function buildBillMemoHtml(
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    @page { size: A4; margin: 8mm; }
+    @page { size: A4; margin: 0; }
     * { box-sizing: border-box; }
     html, body {
       margin: 0;
       padding: 0;
+      width: 100%;
+      height: 100%;
+      background: #fff;
       color: #111;
       font-family: Arial, Helvetica, sans-serif;
       font-size: 11px;
     }
-    .memo { width: 100%; position: relative; }
+    .memo {
+      position: relative;
+      width: 100%;
+      min-height: 100%;
+      height: 100%;
+      padding: 8px 10px 10px;
+      display: flex;
+      flex-direction: column;
+      background: #fff;
+    }
     .stamp {
       position: absolute;
       top: 32%;
@@ -138,7 +151,15 @@ export function buildBillMemoHtml(
       opacity: 0.38;
       z-index: 5;
     }
-    .frame { position: relative; border: 2px solid #111; padding: 0 10px 10px; overflow: hidden; }
+    .frame {
+      position: relative;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      border: 2px solid #111;
+      padding: 0 8px 8px;
+      overflow: hidden;
+    }
     .top { display: flex; align-items: flex-start; width: 100%; height: 38px; margin-bottom: 6px; }
     .motto { flex: 1; font-weight: 600; letter-spacing: 0.5px; padding: 10px 8px 0 0; }
     .phone { flex: 1; text-align: right; font-weight: 700; font-size: 13px; padding: 10px 0 0 8px; }
@@ -167,7 +188,7 @@ export function buildBillMemoHtml(
     .address { font-weight: 500; line-height: 1.4; word-break: break-word; }
     .truck { width: 136px; border: 1px solid #111; padding: 6px 10px 7px; }
     .truck .label { font-weight: 600; }
-    .truck .value { margin-top: 8px; }
+    .truck .value { margin-top: 8px; font-weight: 900; font-size: 14px; -webkit-text-stroke: 0.45px #111; }
     table.meta, table.loads, table.pay, table.sum { width: 100%; border-collapse: collapse; }
     table.meta td, table.meta th, table.loads td, table.loads th, table.pay td, table.pay th, table.sum td {
       border: 1px solid #111;
@@ -178,19 +199,22 @@ export function buildBillMemoHtml(
     table.meta .lbl { font-weight: 600; white-space: nowrap; width: 1%; }
     table.meta td { word-break: break-word; }
     .red { color: #c8232c; font-weight: 700; font-size: 15px; }
+    .memo-no { text-align: center; color: #c8232c; font-weight: 700; font-size: 15px; }
+    .name-board { font-weight: 900; font-size: 13px; -webkit-text-stroke: 0.4px #111; }
     table.loads { margin-top: 0; border-top: 0; table-layout: fixed; }
-    table.loads col.c-sno { width: 4%; }
+    table.loads col.c-sno { width: 6%; }
     table.loads col.c-consignor { width: 10%; }
     table.loads col.c-consignee { width: 12%; }
-    table.loads col.c-goods { width: 8%; }
-    table.loads col.c-weight { width: 11%; }
+    table.loads col.c-goods { width: 7%; }
+    table.loads col.c-weight { width: 10%; }
     table.loads col.c-rate { width: 7.8%; }
     table.loads col.c-num { width: 11.8%; }
     table.loads th { font-weight: 600; text-align: center; white-space: nowrap; font-size: 10px; }
     table.loads td { text-align: center; height: 40px; }
-    table.loads td.left { text-align: left; }
+    table.loads td.party, table.loads th.party { text-align: center; padding-left: 6px; padding-right: 6px; }
+    table.loads td.freight { text-align: right; padding-left: 8px; padding-right: 8px; }
     .apb { font-family: monospace; font-size: 8px; font-weight: 600; letter-spacing: 0.6px; }
-    .to { font-size: 9px; font-weight: 500; margin-top: 2px; }
+    .to { font-size: 9px; font-weight: 500; margin-top: 2px; text-align: center; }
     .unit { font-size: 8px; font-weight: 500; }
     table.loads td.foot-loan,
     table.loads td.foot-freight,
@@ -211,7 +235,7 @@ export function buildBillMemoHtml(
     table.sum td.num, .num { text-align: right; }
     table.sum tr.total td { font-weight: 700; border-top: 2px solid #111; }
     .advance { margin-top: 18px; }
-    .signs { display: table; width: 100%; margin-top: 24px; }
+    .signs { display: table; width: 100%; margin-top: auto; padding-top: 16px; }
     .signs > * { display: table-cell; width: 50%; vertical-align: bottom; }
     .signs .right { text-align: right; }
     .sign-line { border-bottom: 1px solid #111; height: 48px; margin-bottom: 6px; }
@@ -253,7 +277,7 @@ export function buildBillMemoHtml(
           <td class="lbl">Owner Name :</td>
           <td>${text(data.ownerName)}</td>
           <td class="lbl">Memo No. :</td>
-          <td class="red">${text(data.billNumber)}</td>
+          <td class="memo-no">${text(data.billNumber)}</td>
           <td class="lbl">Date :</td>
           <td>${text(formatBillPreviewDate(data.billDate))}</td>
         </tr>
@@ -273,7 +297,7 @@ export function buildBillMemoHtml(
           <td class="lbl">Driver Mobile :</td>
           <td>${text(driverMobiles)}</td>
           <td class="lbl">Name Board :</td>
-          <td colspan="3">${text(data.nameBoardName)}</td>
+          <td class="name-board" colspan="3">${text(data.nameBoardName)}</td>
         </tr>
       </table>
 
@@ -293,8 +317,8 @@ export function buildBillMemoHtml(
         <thead>
           <tr>
             <th>S. No.</th>
-            <th>Consignor</th>
-            <th>Consignee</th>
+            <th class="party">Consignor</th>
+            <th class="party">Consignee</th>
             <th>Goods</th>
             <th>Weight / Qty</th>
             <th>Rate / Unit</th>
@@ -310,12 +334,12 @@ export function buildBillMemoHtml(
             <td colspan="3" class="foot-loan">
               <span class="foot-label">Truck Loan</span>
               <span class="foot-value">${
-                data.truckLoan ? text(formatBillPreviewAmount(data.total)) : ''
+                data.truckLoan ? text(formatBillPreviewMoney(data.total)) : ''
               }</span>
             </td>
             <td colspan="4" class="foot-freight">
               <span class="foot-label">Total Freight</span>
-              <span class="foot-value">${text(formatBillPreviewAmount(data.totalFreight))}</span>
+              <span class="foot-value">${text(formatBillPreviewMoney(data.totalFreight))}</span>
             </td>
             <td colspan="3" class="foot-empty"></td>
           </tr>
