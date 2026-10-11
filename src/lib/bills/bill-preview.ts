@@ -74,6 +74,18 @@ export function formatBillPreviewAmount(value: number | null | undefined): strin
   });
 }
 
+/** Money on the memo: always two decimal places. */
+export function formatBillPreviewMoney(value: number | null | undefined): string {
+  if (value == null || Number.isNaN(value)) {
+    return '';
+  }
+
+  return value.toLocaleString('en-IN', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+}
+
 export function formatBillPreviewWeight(weight: number | null | undefined): string {
   return formatBillPreviewAmount(weight);
 }

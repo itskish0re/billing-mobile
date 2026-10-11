@@ -1,4 +1,4 @@
-import { recalculateBillForm } from '@/lib/bills/bill-form';
+import { recalculateBillForm, truncateFreightRupees } from '@/lib/bills/bill-form';
 import { createBillOtherItem, type BillFormValues, type BillLoadFormLine } from '@/types/bill-form';
 import type { BillListLoad, BillListRow } from '@/types/bill-list';
 
@@ -16,8 +16,12 @@ function inferUnitIsFixed(load: BillListLoad): boolean {
     return false;
   }
   const computed = weightOrQuantity != null ? weightOrQuantity * ratePerUnit : null;
-  const matchesRate = Math.abs(freight - ratePerUnit) < 0.005;
-  const matchesComputed = computed != null && Math.abs(freight - computed) < 0.005;
+  const near = (left: number, right: number) => Math.abs(left - right) < 0.005;
+  const matchesRate =
+    near(freight, ratePerUnit) || near(freight, truncateFreightRupees(ratePerUnit));
+  const matchesComputed =
+    computed != null &&
+    (near(freight, computed) || near(freight, truncateFreightRupees(computed)));
   return matchesRate && !matchesComputed;
 }
 

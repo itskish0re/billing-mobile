@@ -209,6 +209,15 @@ function roundMoney(value: number): number {
   return Math.round(value * 100) / 100;
 }
 
+/** Freight is a whole-rupee amount. 100.20 becomes 100. */
+export function truncateFreightRupees(value: number): number {
+  if (!Number.isFinite(value)) {
+    return 0;
+  }
+
+  return Math.trunc(value);
+}
+
 /**
  * Commission rounding on the ones digit, to a multiple of 10.
  * Last digit below 5 floors (`3523` → `3520`); 5 and above ceils
@@ -233,7 +242,7 @@ function calculateLoadFreight(line: BillLoadFormLine): number | null {
   }
 
   if (line.unitIsFixed) {
-    return roundMoney(rate);
+    return truncateFreightRupees(rate);
   }
 
   const weight = toFormNumber(line.weightOrQuantity);
@@ -241,7 +250,7 @@ function calculateLoadFreight(line: BillLoadFormLine): number | null {
     return null;
   }
 
-  return roundMoney(weight * rate);
+  return truncateFreightRupees(weight * rate);
 }
 
 export function recalculateLoadLine(line: BillLoadFormLine): BillLoadFormLine {
